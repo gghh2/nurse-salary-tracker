@@ -246,9 +246,16 @@ class DataManager {
         const index = rates.findIndex(rate => rate.id === rateId);
         
         if (index !== -1) {
-            rates[index] = { ...rates[index], ...updatedRate };
+            // Garder l'ID existant
+            const existingRate = rates[index];
+            rates[index] = { 
+                ...existingRate, 
+                ...updatedRate,
+                id: existingRate.id  // Forcer la conservation de l'ID
+            };
             return this.saveRates(rates);
         }
+        console.error('Tarif non trouvé pour update:', rateId);
         return false;
     }
 
@@ -300,10 +307,18 @@ class DataManager {
         const index = missions.findIndex(mission => mission.id === missionId);
         
         if (index !== -1) {
-            missions[index] = { ...missions[index], ...updatedMission };
-            missions[index].updatedAt = new Date().toISOString();
+            // Garder l'ID et les métadonnées existantes
+            const existingMission = missions[index];
+            missions[index] = { 
+                ...existingMission, 
+                ...updatedMission,
+                id: existingMission.id,  // Forcer la conservation de l'ID
+                createdAt: existingMission.createdAt,  // Garder la date de création
+                updatedAt: new Date().toISOString()  // Mettre à jour la date de modification
+            };
             return this.saveMissions(missions);
         }
+        console.error('Mission non trouvée pour update:', missionId);
         return false;
     }
 
@@ -701,6 +716,47 @@ class DataManager {
     }
 
     /**
+     * Valide la structure d'un tarif
+     */
+    validateRate(rate) {
+        const errors = [];
+        
+        if (!rate.acronym || rate.acronym.trim() === '') {
+            errors.push('L\'acronyme est obligatoire');
+        }
+        
+        if (rate.hours === undefined || rate.hours === null || rate.hours < 0) {
+            errors.push('Le nombre d\'heures est obligatoire et doit être positif ou zéro');
+        }
+        
+        // Vérifier qu'on a soit un tarif horaire soit un salaire
+        if (rate.hours > 0) {
+            if (!rate.hourlyRate && !rate.salary) {
+                errors.push('Pour une mission avec heures, vous devez renseigner le tarif horaire ou le salaire');
+            }
+        } else {
+            // Pour les indemnités (0h), on doit avoir un salaire
+            if (!rate.salary) {
+                errors.push('Pour une indemnité, le salaire est obligatoire');
+            }
+        }
+        
+        // Vérification des valeurs numériques
+        if (rate.hourlyRate && rate.hourlyRate < 0) {
+            errors.push('Le tarif horaire doit être positif');
+        }
+        
+        if (rate.salary && rate.salary < 0) {
+            errors.push('Le salaire doit être positif');
+        }
+        
+        return {
+            isValid: errors.length === 0,
+            errors: errors
+        };
+    }
+
+    /**
      * Valide la structure d'une mission
      */
     validateMission(mission) {
@@ -820,9 +876,14 @@ class DataManager {
     /**
      * Sauvegarde les missions (utilitaire pour migrateSchedules)
      */
-    saveMissions() {
-        const missions = this.getMissions();
-        localStorage.setItem(this.STORAGE_KEYS.MISSIONS, JSON.stringify(missions));
+    saveMissions(missions) {
+        try {
+            localStorage.setItem(this.STORAGE_KEYS.MISSIONS, JSON.stringify(missions));
+            return true;
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde des missions:', error);
+            return false;
+        }
     }
 }
 

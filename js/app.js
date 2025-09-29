@@ -1215,7 +1215,7 @@ class NurseSalaryApp {
             
             // Sauvegarder les modifications
             if (updatedCount > 0) {
-                this.dataManager.saveMissions();
+                this.dataManager.saveMissions(missions);
                 this.showNotification(`${updatedCount} mission(s) mise(s) à jour avec les horaires`, 'success');
                 // Recharger l'interface si on est dans le planning
                 if (this.currentSection === 'planning') {
