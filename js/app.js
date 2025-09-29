@@ -238,12 +238,6 @@ class NurseSalaryApp {
             importFile.addEventListener('change', (e) => this.importData(e));
         }
 
-        // Migration des horaires
-        const migrateBtn = document.getElementById('migrate-schedules-btn');
-        if (migrateBtn) {
-            migrateBtn.addEventListener('click', () => this.migrateSchedules());
-        }
-
         // Reset
         const resetBtn = document.getElementById('reset-data-btn');
         if (resetBtn) {
@@ -1315,42 +1309,7 @@ class NurseSalaryApp {
         event.target.value = '';
     }
 
-    /**
-     * Migre les missions existantes avec les horaires
-     */
-    migrateSchedules() {
-        if (!confirm('Cette action va ajouter les horaires par défaut aux missions qui n\'en ont pas.\n\nContinuer ?')) {
-            return;
-        }
 
-        try {
-            const result = this.dataManager.migrateMissionsWithSchedules();
-            
-            if (result.success) {
-                if (result.migratedCount > 0) {
-                    this.showNotification(
-                        `✅ Migration réussie !<br>${result.migratedCount} mission(s) mise(s) à jour sur ${result.totalMissions}`,
-                        'success',
-                        5000
-                    );
-                    
-                    // Recharger l'affichage si on est sur le planning
-                    if (this.currentSection === 'planning') {
-                        this.loadPlanning();
-                    }
-                } else {
-                    this.showNotification(
-                        'Aucune mission à migrer. Toutes vos missions ont déjà des horaires !',
-                        'info',
-                        4000
-                    );
-                }
-            }
-        } catch (error) {
-            console.error('Erreur lors de la migration:', error);
-            this.showNotification('Erreur lors de la migration', 'error');
-        }
-    }
 
     /**
      * Remet à zéro toutes les données
@@ -1370,119 +1329,6 @@ class NurseSalaryApp {
             } else {
                 this.showNotification('Erreur lors de la suppression', 'error');
             }
-        }
-    }
-
-    /**
-     * Exporte les missions vers un fichier ICS pour Google Calendar
-     */
-    exportToCalendar() {
-        try {
-            // Générer le contenu ICS
-            const icsContent = this.salaryManager.generateICSFile();
-            
-            // Télécharger le fichier
-            const date = new Date();
-            const filename = `missions-infirmier-${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}.ics`;
-            
-            this.downloadFile(icsContent, filename, 'text/calendar;charset=utf-8');
-            this.showNotification('Export ICS créé avec succès ! Vous pouvez maintenant l\'importer dans Google Calendar', 'success', 8000);
-        } catch (error) {
-            console.error('Erreur lors de l\'export ICS:', error);
-            this.showNotification('Erreur lors de la création du fichier ICS', 'error');
-        }
-    }
-
-    /**
-     * Exporte les données au format JSON
-     */
-    exportData() {
-        const data = this.dataManager.exportData();
-        const jsonStr = JSON.stringify(data, null, 2);
-        const date = new Date();
-        const filename = `sauvegarde-salaires-${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}.json`;
-        
-        this.downloadFile(jsonStr, filename, 'application/json');
-        this.showNotification('Sauvegarde exportée avec succès', 'success');
-    }
-
-    /**
-     * Importe les données depuis un fichier JSON
-     */
-    importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                const success = this.dataManager.importData(data);
-                
-                if (success) {
-                    this.showNotification('Données importées avec succès', 'success');
-                    // Recharger l'interface
-                    this.loadSectionContent(this.currentSection);
-                } else {
-                    this.showNotification('Format de fichier invalide', 'error');
-                }
-            } catch (error) {
-                console.error('Erreur lors de l\'import:', error);
-                this.showNotification('Erreur lors de l\'import des données', 'error');
-            }
-            
-            // Réinitialiser l'input file
-            event.target.value = '';
-        };
-        
-        reader.readAsText(file);
-    }
-
-    /**
-     * Migre les horaires des tarifs vers les missions existantes
-     */
-    migrateSchedules() {
-        const confirmation = confirm(
-            'Cette action va ajouter les horaires par défaut des tarifs aux missions qui n\'ont pas encore d\'horaires définis.\n\n' +
-            'Cela permet d\'enrichir vos missions pour un meilleur export vers Google Calendar.\n\n' +
-            'Voulez-vous continuer ?'
-        );
-        
-        if (!confirmation) return;
-        
-        try {
-            const rates = this.dataManager.getRates();
-            const missions = this.dataManager.getMissions();
-            let updatedCount = 0;
-            
-            missions.forEach(mission => {
-                // Si la mission n'a pas d'horaires définis
-                if (!mission.startTime || !mission.endTime) {
-                    const rate = rates.find(r => r.id === mission.rateId);
-                    
-                    if (rate && rate.startTime && rate.endTime) {
-                        // Mettre à jour la mission avec les horaires du tarif
-                        mission.startTime = rate.startTime;
-                        mission.endTime = rate.endTime;
-                        updatedCount++;
-                    }
-                }
-            });
-            
-            // Sauvegarder les modifications
-            if (updatedCount > 0) {
-                this.dataManager.saveMissions(missions);
-                this.showNotification(`${updatedCount} mission(s) mise(s) à jour avec les horaires`, 'success');
-                // Recharger l'interface si on est dans le planning
-                if (this.currentSection === 'planning') {
-                    this.loadPlanning();
-                }
-            } else {
-                this.showNotification('Aucune mission à mettre à jour', 'info');
-            }
-        } catch (error) {
-            console.error('Erreur lors de la migration des horaires:', error);
-            this.showNotification('Erreur lors de la mise à jour des missions', 'error');
         }
     }
 
