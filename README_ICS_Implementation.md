@@ -36,7 +36,10 @@
 
 ### Données exportées
 - Date et horaires de la mission
-- Type de mission (acronyme)
+- Type de mission (acronyme) avec emoji de statut :
+  - ✅ = Mission confirmée
+  - ❓ = Mission planifiée (non confirmée)
+  - ✔️ = Mission réalisée (effectuée)
 - Établissement (lieu)
 - Service et notes
 - Statut (planifiée/confirmée/réalisée)
@@ -89,7 +92,7 @@ BEGIN:VEVENT
 UID:mission-[id]@nurse-salary-tracker
 DTSTART:20250930T080000
 DTEND:20250930T150000
-SUMMARY:Urg C7
+SUMMARY:✅ Urg C7
 LOCATION:Clinique de Cesson Sévigné
 DESCRIPTION:Service: Urgences - Durée: 7h
 STATUS:CONFIRMED

@@ -486,8 +486,22 @@ class SalaryManager {
             const now = new Date();
             const timestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
             
-            // Titre de l'événement
-            const summary = rate.acronym;
+            // Titre de l'événement avec emoji selon le statut
+            let statusEmoji = '';
+            switch(mission.status) {
+                case 'confirmed':
+                    statusEmoji = '✅ ';  // Check vert pour confirmée
+                    break;
+                case 'planned':
+                    statusEmoji = '❓ ';   // Point d'interrogation pour planifiée
+                    break;
+                case 'completed':
+                    statusEmoji = '✔️ ';  // Check simple pour réalisée
+                    break;
+                default:
+                    statusEmoji = '';
+            }
+            const summary = statusEmoji + rate.acronym;
             
             // Lieu
             const location = mission.establishment || rate.establishment || '';

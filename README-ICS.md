@@ -19,18 +19,31 @@ Pour chaque mission non annulée, le fichier ICS contient :
 📅 Date de la mission
 ⏰ Horaires de début et fin
 📍 Lieu (établissement)
-📝 Titre (C7, LP, etc.)
+📝 Titre avec emoji de statut + acronyme
 ℹ️ Description (service, notes)
-✓ Statut (confirmé/planifié)
+✓ Statut (confirmé/planifié/réalisé)
 ```
 
-**Exemple d'événement :**
+**Emojis de statut dans le titre :**
+- ✅ **Confirmée** : Mission confirmée par l'établissement
+- ❓ **Planifiée** : Mission prévue mais pas encore confirmée
+- ✔️ **Réalisée** : Mission effectuée
+
+**Exemples d'événements :**
 ```
 30/09/2025
 08:00 - 15:00
-Urg C7
+✅ Urg C7
 📍 Clinique de Cesson Sévigné
 Service: Urgences - Durée: 7h
+```
+
+```
+15/10/2025
+06:45 - 19:15
+❓ LP
+📍 Hôpital Pontchaillou
+Service: Urgences Lit Porte - Durée: 12.5h
 ```
 
 ## 🚀 Comment exporter vos missions
