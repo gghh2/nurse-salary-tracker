@@ -37,12 +37,14 @@
 ### Données exportées
 - Date et horaires de la mission
 - Type de mission (acronyme) avec emoji de statut :
-  - ✅ = Mission confirmée
-  - ❓ = Mission planifiée (non confirmée)
-  - ✔️ = Mission réalisée (effectuée)
+  - ✅ = Mission confirmée (vert)
+  - ❓ = Mission planifiée (orange)
+  - ✔️ = Mission réalisée (bleu)
 - Établissement (lieu)
 - Service et notes
 - Statut (planifiée/confirmée/réalisée)
+- Catégories pour certains calendriers
+- Tentative de couleurs (propriétés non-standard)
 - **PAS de données financières** (confidentialité)
 
 ### Gestion des horaires

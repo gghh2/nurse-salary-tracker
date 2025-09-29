@@ -518,6 +518,21 @@ class SalaryManager {
                           mission.status === 'completed' ? 'CONFIRMED' : 
                           'TENTATIVE';
             
+            // Catégories et couleurs (support limité selon les calendriers)
+            let categories = rate.acronym;
+            let color = '';
+            
+            if (mission.status === 'confirmed') {
+                categories += ',Confirmé';
+                color = '#00A36C';  // Vert pour confirmé
+            } else if (mission.status === 'planned') {
+                categories += ',Planifié';
+                color = '#FF8C00';  // Orange pour planifié
+            } else if (mission.status === 'completed') {
+                categories += ',Réalisé';
+                color = '#4169E1';  // Bleu pour réalisé
+            }
+            
             // Construire l'événement
             const eventLines = [
                 'BEGIN:VEVENT',
@@ -529,6 +544,10 @@ class SalaryManager {
                 location ? `LOCATION:${this.escapeICS(location)}` : '',
                 description.length > 0 ? `DESCRIPTION:${this.escapeICS(description.join(' - '))}` : '',
                 `STATUS:${status}`,
+                `CATEGORIES:${categories}`,
+                color ? `COLOR:${color}` : '',  // Propriété non-standard pour certains calendriers
+                color ? `X-APPLE-CALENDAR-COLOR:${color}` : '',  // Pour Apple Calendar
+                color ? `X-MICROSOFT-CDO-COLOR:${color}` : '',  // Pour Outlook
                 'TRANSP:OPAQUE',
                 'END:VEVENT'
             ].filter(line => line !== '').join('\r\n');
