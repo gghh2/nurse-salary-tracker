@@ -443,6 +443,9 @@ class SalaryManager {
             'X-WR-CALDESC:Planning des missions infirmières'
         ].join('\r\n');
         
+        // IMPORTANT : Ajouter une ligne vide après l'en-tête
+        icsContent += '\r\n';
+        
         // Ajouter chaque mission comme événement
         missions.forEach(mission => {
             // Ignorer les missions annulées
@@ -502,9 +505,8 @@ class SalaryManager {
                           mission.status === 'completed' ? 'CONFIRMED' : 
                           'TENTATIVE';
             
-            // Construire l'événement
+            // Construire l'événement avec saut de ligne au début
             const event = [
-                '',
                 'BEGIN:VEVENT',
                 `UID:${uid}`,
                 `DTSTAMP:${timestamp}`,
@@ -518,7 +520,8 @@ class SalaryManager {
                 'END:VEVENT'
             ].filter(line => line !== '').join('\r\n');
             
-            icsContent += event;
+            // Ajouter l'événement avec un saut de ligne avant
+            icsContent += '\r\n' + event;
         });
         
         // Fermer le calendrier
