@@ -440,13 +440,12 @@ class SalaryManager {
             'METHOD:PUBLISH',
             'X-WR-CALNAME:Missions Infirmier',
             'X-WR-TIMEZONE:Europe/Paris',
-            'X-WR-CALDESC:Planning des missions infirmières'
+            'X-WR-CALDESC:Planning des missions infirmières',
+            ''  // Ligne vide après l'en-tête
         ].join('\r\n');
         
-        // IMPORTANT : Ajouter une ligne vide après l'en-tête
-        icsContent += '\r\n';
-        
         // Ajouter chaque mission comme événement
+        const events = [];
         missions.forEach(mission => {
             // Ignorer les missions annulées
             if (mission.status === 'cancelled') return;
@@ -505,8 +504,8 @@ class SalaryManager {
                           mission.status === 'completed' ? 'CONFIRMED' : 
                           'TENTATIVE';
             
-            // Construire l'événement avec saut de ligne au début
-            const event = [
+            // Construire l'événement
+            const eventLines = [
                 'BEGIN:VEVENT',
                 `UID:${uid}`,
                 `DTSTAMP:${timestamp}`,
@@ -520,12 +519,16 @@ class SalaryManager {
                 'END:VEVENT'
             ].filter(line => line !== '').join('\r\n');
             
-            // Ajouter l'événement avec un saut de ligne avant
-            icsContent += '\r\n' + event;
+            events.push(eventLines);
         });
         
-        // Fermer le calendrier
-        icsContent += '\r\nEND:VCALENDAR';
+        // Joindre tous les événements avec une ligne vide entre chacun
+        if (events.length > 0) {
+            icsContent += '\r\n' + events.join('\r\n\r\n');
+        }
+        
+        // Fermer le calendrier avec une ligne vide avant
+        icsContent += '\r\n\r\nEND:VCALENDAR';
         
         return icsContent;
     }
