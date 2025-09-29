@@ -743,6 +743,87 @@ class DataManager {
             errors: errors
         };
     }
+
+    /**
+     * EXPORT ET IMPORT DES DONNÉES
+     */
+
+    /**
+     * Exporte toutes les données au format JSON
+     */
+    exportData() {
+        return {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            rates: this.getRates(),
+            missions: this.getMissions()
+        };
+    }
+
+    /**
+     * Importe des données depuis un objet JSON
+     */
+    importData(data) {
+        try {
+            // Validation basique de la structure
+            if (!data || typeof data !== 'object') {
+                console.error('Données invalides');
+                return false;
+            }
+
+            // Vérifier la présence des données essentielles
+            if (!data.rates || !Array.isArray(data.rates)) {
+                console.error('Tarifs manquants ou invalides');
+                return false;
+            }
+
+            if (!data.missions || !Array.isArray(data.missions)) {
+                console.error('Missions manquantes ou invalides');
+                return false;
+            }
+
+            // Backup des données actuelles au cas où
+            const backup = {
+                rates: this.getRates(),
+                missions: this.getMissions()
+            };
+
+            try {
+                // Importer les tarifs
+                localStorage.setItem(this.STORAGE_KEYS.RATES, JSON.stringify(data.rates));
+                
+                // Importer les missions
+                localStorage.setItem(this.STORAGE_KEYS.MISSIONS, JSON.stringify(data.missions));
+
+                // Vérifier que tout s'est bien passé
+                const testRates = this.getRates();
+                const testMissions = this.getMissions();
+
+                if (!testRates || !testMissions) {
+                    throw new Error('Échec de la vérification après import');
+                }
+
+                return true;
+            } catch (innerError) {
+                // Restaurer le backup en cas d'erreur
+                console.error('Erreur lors de l\'import, restauration du backup:', innerError);
+                localStorage.setItem(this.STORAGE_KEYS.RATES, JSON.stringify(backup.rates));
+                localStorage.setItem(this.STORAGE_KEYS.MISSIONS, JSON.stringify(backup.missions));
+                return false;
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'import des données:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Sauvegarde les missions (utilitaire pour migrateSchedules)
+     */
+    saveMissions() {
+        const missions = this.getMissions();
+        localStorage.setItem(this.STORAGE_KEYS.MISSIONS, JSON.stringify(missions));
+    }
 }
 
 // Créer une instance globale du gestionnaire de données
