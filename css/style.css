@@ -98,16 +98,16 @@ body {
 
 .section-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     margin-bottom: 2rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
 
-.section-header h2 {
-    color: var(--primary-color);
-    font-size: 1.8rem;
+/* Quand section-header contient plusieurs éléments (Planning) */
+#planning .section-header {
+    justify-content: space-between;
 }
 
 /* Boutons */
@@ -260,16 +260,25 @@ body {
     flex-wrap: wrap;
 }
 
+
+
 .month-selector {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
     background: white;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
-    min-width: 200px;
+    min-width: 250px;
+    max-width: 300px;
+    border: 1px solid var(--medium-gray);
+    transition: box-shadow 0.3s ease;
+}
+
+.month-selector:hover {
+    box-shadow: var(--shadow-lg);
 }
 
 .month-selector button {
@@ -279,19 +288,43 @@ body {
     padding: 0.5rem;
     color: var(--primary-color);
     border-radius: 50%;
-    transition: background 0.3s ease;
+    transition: all 0.2s ease;
     flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .month-selector button:hover {
     background: var(--light-gray);
 }
 
-#current-month-display {
+.month-selector button:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.month-selector button:active {
+    transform: scale(0.95);
+}
+
+.month-selector button i {
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+#current-month-display,
+#dashboard-month-display {
     font-weight: 600;
     text-align: center;
     text-transform: capitalize;
     flex: 1;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0 0.5rem;
+    min-width: 120px;
 }
 
 .planning-grid {
@@ -304,7 +337,7 @@ body {
 
 .calendar-header {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     background: var(--primary-color);
     color: white;
 }
@@ -317,7 +350,7 @@ body {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
 .calendar-day {
@@ -425,6 +458,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     margin-bottom: 2rem;
+    margin-top: 2rem;
 }
 
 .backup-card {
@@ -709,6 +743,101 @@ body {
     color: #c62828;
 }
 
+/* FAB (Floating Action Button) pour mobile - Planning uniquement */
+@media (max-width: 768px) {
+    /* Transformer le bouton Ajouter mission en FAB uniquement dans Planning */
+    #planning.app-section.active #add-mission-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        padding: 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        z-index: 100;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--primary-color);
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+        font-size: 0; /* Cacher le texte */
+        overflow: hidden;
+        animation: fadeInScale 0.3s ease;
+        cursor: pointer;
+    }
+    
+    #planning.app-section.active #add-mission-btn:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 6px 20px rgba(44, 82, 130, 0.35), 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Sur les écrans tactiles, pas d'effet hover */
+    @media (hover: none) {
+        #planning.app-section.active #add-mission-btn:hover {
+            transform: none;
+        }
+    }
+    
+    #planning.app-section.active #add-mission-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* Style de l'icône + */
+    #planning.app-section.active #add-mission-btn i {
+        font-size: 1.5rem;
+        margin: 0;
+        margin-left: 7px;
+        color: white;
+    }
+    
+    /* Animation d'entrée du FAB */
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    /* Ajuster le header du planning sur mobile */
+    #planning .section-header {
+        margin-bottom: 1rem;
+        justify-content: center;
+    }
+    
+    /* Le sélecteur de mois prend toute la largeur */
+    #planning .month-selector {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Ajouter du padding en bas pour que le FAB ne cache pas le contenu */
+    #planning.app-section.active {
+        padding-bottom: 80px;
+    }
+    
+    /* Ajuster la position du FAB sur les petits écrans */
+    @media (max-width: 380px) {
+        #planning.app-section.active #add-mission-btn {
+            bottom: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+        }
+        
+        #planning.app-section.active #add-mission-btn i {
+            font-size: 1.3rem;
+        }
+    }
+}
+
 /* Animations */
 @keyframes slideInRight {
     from {
@@ -740,6 +869,13 @@ body {
     .section-header {
         flex-direction: column;
         align-items: stretch;
+        justify-content: stretch;
+    }
+    
+    #planning .section-header,
+    #dashboard .section-header,
+    #rates .section-header {
+        justify-content: stretch;
     }
     
     .stats-grid {
@@ -753,12 +889,17 @@ body {
     
     .month-selector {
         width: 100%;
+        max-width: 100%;
         justify-content: space-between;
     }
     
     .month-selector button {
         padding: 0.75rem;
+        width: 44px;
+        height: 44px;
     }
+    
+
     
     /* Réduire le padding des jours de la semaine sur mobile */
     .calendar-header div {
