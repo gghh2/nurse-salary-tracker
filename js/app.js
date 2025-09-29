@@ -217,6 +217,12 @@ class NurseSalaryApp {
      * Configuration des événements de sauvegarde
      */
     setupBackupEvents() {
+        // Export ICS
+        const exportIcsBtn = document.getElementById('export-ics-btn');
+        if (exportIcsBtn) {
+            exportIcsBtn.addEventListener('click', () => this.exportToCalendar());
+        }
+        
         // Export
         const exportBtn = document.getElementById('export-data-btn');
         if (exportBtn) {
@@ -965,6 +971,43 @@ class NurseSalaryApp {
     loadBackup() {
         const storageInfo = this.dataManager.getStorageInfo();
         console.log('Informations de stockage:', storageInfo);
+    }
+
+    /**
+     * Exporte les missions vers Google Calendar (fichier ICS)
+     */
+    exportToCalendar() {
+        try {
+            const missions = this.dataManager.getMissions();
+            
+            if (missions.length === 0) {
+                this.showNotification('Aucune mission à exporter', 'warning');
+                return;
+            }
+            
+            // Générer le fichier ICS
+            const icsContent = this.salaryManager.generateICSFile();
+            
+            // Nom du fichier avec timestamp
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10);
+            const filename = `missions-infirmier-${dateStr}.ics`;
+            
+            // Télécharger le fichier
+            this.downloadFile(icsContent, filename, 'text/calendar');
+            
+            this.showNotification(
+                `✅ Fichier ICS téléchargé !<br><br>` +
+                `📱 <strong>Sur mobile :</strong> Ouvrir le fichier pour l'ajouter à Google Calendar<br>` +
+                `💻 <strong>Sur PC :</strong> Google Calendar → ⚙️ Paramètres → Importer et exporter → Importer`,
+                'success',
+                8000
+            );
+            
+        } catch (error) {
+            console.error('Erreur lors de l\'export ICS:', error);
+            this.showNotification('Erreur lors de l\'export vers Calendar', 'error');
+        }
     }
 
     /**
