@@ -197,6 +197,30 @@
             <section id="backup" class="app-section">
                 <h2>Sauvegarde et restauration</h2>
                 
+                <!-- Nouvelle section Google Drive -->
+                <div class="drive-sync-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; color: white; margin-bottom: 2rem;">
+                    <h3 style="color: white; margin-top: 0;"><i class="fab fa-google-drive"></i> Synchronisation Google Drive</h3>
+                    
+                    <div id="sync-status" style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <!-- Le statut sera affiché ici dynamiquement -->
+                        <span id="sync-status-icon">⚠️</span>
+                        <span id="sync-status-text">Non configuré</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <button class="btn" id="backup-to-drive-btn" style="background: white; color: #4285F4; border: none; padding: 1rem; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                            <i class="fas fa-cloud-upload-alt"></i> Sauvegarder sur Drive
+                        </button>
+                        <button class="btn" id="restore-from-drive-btn" style="background: white; color: #DB4437; border: none; padding: 1rem; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                            <i class="fas fa-cloud-download-alt"></i> Restaurer depuis Drive
+                        </button>
+                    </div>
+                    
+                    <button class="btn" id="configure-drive-btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-size: 0.9rem;">
+                        <i class="fas fa-cog"></i> Configurer Google Drive
+                    </button>
+                </div>
+                
                 <div class="backup-grid">
                     <div class="backup-card">
                         <h3><i class="fas fa-calendar-alt"></i> Exporter vers Calendar</h3>
@@ -410,10 +434,53 @@
 
     <!-- Messages de notification -->
     <div id="notifications" class="notifications-container"></div>
+    
+    <!-- Modale de configuration Google Drive -->
+    <div id="drive-config-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fab fa-google-drive"></i> Configuration Google Drive</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box" style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h4 style="margin-top: 0; color: #1976d2;">📚 Instructions de configuration</h4>
+                    <ol style="margin-bottom: 0;">
+                        <li>Ouvrir <a href="https://script.google.com" target="_blank">script.google.com</a></li>
+                        <li>Créer un nouveau projet</li>
+                        <li>Copier le code du fichier <code>google-apps-script.js</code></li>
+                        <li>Déployer comme Web App</li>
+                        <li>Copier l'URL et générer un token</li>
+                    </ol>
+                </div>
+                
+                <form id="drive-config-form">
+                    <div class="form-group">
+                        <label for="script-url">URL du Web App Google Apps Script</label>
+                        <input type="url" id="script-url" required placeholder="https://script.google.com/macros/s/..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <small style="color: #666;">L'URL fournie après le déploiement</small>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label for="script-token">Token de sécurité</label>
+                        <input type="text" id="script-token" required placeholder="Votre-token-secret" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <small style="color: #666;">Le même token que dans le script Google</small>
+                    </div>
+                    
+                    <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary" id="cancel-drive-config">Annuler</button>
+                        <button type="button" class="btn btn-success" id="test-drive-connection">Tester la connexion</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="js/data-manager.js"></script>
     <script src="js/salary-manager.js"></script>
+    <script src="js/google-drive-sync.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
