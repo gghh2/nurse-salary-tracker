@@ -216,6 +216,14 @@
                     </div>
                     
                     <div class="backup-card">
+                        <h3><i class="fas fa-sync"></i> Mise à jour</h3>
+                        <p>Ajouter les horaires aux missions existantes</p>
+                        <button class="btn btn-success" id="migrate-schedules-btn">
+                            Mettre à jour les missions
+                        </button>
+                    </div>
+                    
+                    <div class="backup-card">
                         <h3><i class="fas fa-trash"></i> Réinitialiser</h3>
                         <p>Supprimer toutes les données (irréversible)</p>
                         <button class="btn btn-danger" id="reset-data-btn">
@@ -267,6 +275,22 @@
                     <small style="color: #6c757d; font-size: 0.8rem;">Peut être 0 pour les indemnités. Géré au quart d'heure (ex: 7.25)</small>
                 </div>
                 <div class="form-group">
+                    <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">Horaires par défaut</h4>
+                    <small style="color: #6c757d; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">
+                        Horaires typiques pour ce type de mission (pré-rempliront les missions)
+                    </small>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label for="rate-start-time">Heure de début</label>
+                            <input type="time" id="rate-start-time" placeholder="08:00">
+                        </div>
+                        <div>
+                            <label for="rate-end-time">Heure de fin</label>
+                            <input type="time" id="rate-end-time" placeholder="15:00">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="rate-hourly-rate">Tarif horaire net (€/h)</label>
                     <input type="number" id="rate-hourly-rate" step="0.001" placeholder="14.620">
                     <small style="color: #6c757d; font-size: 0.8rem;">Optionnel si vous renseignez le salaire estimé</small>
@@ -302,6 +326,22 @@
                         <option value="">Sélectionner un type</option>
                         <!-- Les options seront ajoutées dynamiquement -->
                     </select>
+                </div>
+                <div class="form-group">
+                    <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">Horaires de la mission</h4>
+                    <small style="color: #6c757d; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">
+                        Pré-remplis depuis le tarif, modifiables pour cette mission
+                    </small>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label for="mission-start-time">Heure de début</label>
+                            <input type="time" id="mission-start-time" placeholder="08:00">
+                        </div>
+                        <div>
+                            <label for="mission-end-time">Heure de fin</label>
+                            <input type="time" id="mission-end-time" placeholder="15:00">
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="mission-establishment">Établissement</label>

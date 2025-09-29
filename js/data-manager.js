@@ -592,6 +592,45 @@ class DataManager {
      */
 
     /**
+     * Migre les missions existantes pour ajouter les horaires depuis les tarifs
+     * À exécuter une seule fois après l'ajout de la fonctionnalité horaires
+     */
+    migrateMissionsWithSchedules() {
+        const missions = this.getMissions();
+        const rates = this.getRates();
+        let migratedCount = 0;
+        
+        missions.forEach(mission => {
+            // Si la mission n'a pas d'horaires, les récupérer depuis le tarif
+            if (!mission.startTime || !mission.endTime) {
+                const rate = rates.find(r => r.id === mission.rateId);
+                if (rate && rate.startTime && rate.endTime) {
+                    mission.startTime = rate.startTime;
+                    mission.endTime = rate.endTime;
+                    migratedCount++;
+                }
+            }
+        });
+        
+        if (migratedCount > 0) {
+            this.saveMissions(missions);
+            console.log(`Migration réussie : ${migratedCount} mission(s) mise(s) à jour avec les horaires`);
+            return {
+                success: true,
+                migratedCount: migratedCount,
+                totalMissions: missions.length
+            };
+        } else {
+            console.log('Aucune mission à migrer');
+            return {
+                success: true,
+                migratedCount: 0,
+                totalMissions: missions.length
+            };
+        }
+    }
+
+    /**
      * Vérifie l'état du localStorage
      */
     getStorageInfo() {

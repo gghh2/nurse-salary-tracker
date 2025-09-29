@@ -232,6 +232,12 @@ class NurseSalaryApp {
             importFile.addEventListener('change', (e) => this.importData(e));
         }
 
+        // Migration des horaires
+        const migrateBtn = document.getElementById('migrate-schedules-btn');
+        if (migrateBtn) {
+            migrateBtn.addEventListener('click', () => this.migrateSchedules());
+        }
+
         // Reset
         const resetBtn = document.getElementById('reset-data-btn');
         if (resetBtn) {
@@ -423,6 +429,8 @@ class NurseSalaryApp {
                 document.getElementById('rate-hours').value = rate.hours;
                 document.getElementById('rate-hourly-rate').value = rate.hourlyRate || '';
                 document.getElementById('rate-salary').value = rate.salary || '';
+                document.getElementById('rate-start-time').value = rate.startTime || '';
+                document.getElementById('rate-end-time').value = rate.endTime || '';
             }
         } else {
             // Mode création
@@ -517,7 +525,9 @@ class NurseSalaryApp {
             establishment: document.getElementById('rate-establishment').value,
             hours: hours,
             hourlyRate: finalHourlyRate,
-            salary: finalSalary
+            salary: finalSalary,
+            startTime: document.getElementById('rate-start-time').value || null,
+            endTime: document.getElementById('rate-end-time').value || null
         };
 
         // Validation
@@ -699,6 +709,8 @@ class NurseSalaryApp {
     setupRateSelectAutoComplete() {
         const rateSelect = document.getElementById('mission-rate');
         const establishmentInput = document.getElementById('mission-establishment');
+        const startTimeInput = document.getElementById('mission-start-time');
+        const endTimeInput = document.getElementById('mission-end-time');
         
         if (!rateSelect || !establishmentInput) return;
 
@@ -713,10 +725,18 @@ class NurseSalaryApp {
             const selectedRateId = e.target.value;
             if (selectedRateId) {
                 const rate = this.dataManager.getRateById(selectedRateId);
-                if (rate && rate.establishment) {
+                if (rate) {
                     // Auto-compléter l'établissement seulement si le champ est vide
-                    if (!establishmentInput.value.trim()) {
+                    if (rate.establishment && !establishmentInput.value.trim()) {
                         establishmentInput.value = rate.establishment;
+                    }
+                    
+                    // Auto-compléter les horaires depuis le tarif
+                    if (rate.startTime && startTimeInput) {
+                        startTimeInput.value = rate.startTime;
+                    }
+                    if (rate.endTime && endTimeInput) {
+                        endTimeInput.value = rate.endTime;
                     }
                 }
             }
@@ -761,6 +781,8 @@ class NurseSalaryApp {
                 document.getElementById('mission-notes').value = mission.notes || '';
                 document.getElementById('mission-real-gross').value = mission.realGrossSalary || '';
                 document.getElementById('mission-real-net').value = mission.realNetSalary || '';
+                document.getElementById('mission-start-time').value = mission.startTime || '';
+                document.getElementById('mission-end-time').value = mission.endTime || '';
                 
                 // Afficher le bouton supprimer
                 if (deleteBtn) {
@@ -862,7 +884,9 @@ class NurseSalaryApp {
             status: document.getElementById('mission-status').value,
             notes: document.getElementById('mission-notes').value,
             realGrossSalary: parseFloat(document.getElementById('mission-real-gross').value) || null,
-            realNetSalary: parseFloat(document.getElementById('mission-real-net').value) || null
+            realNetSalary: parseFloat(document.getElementById('mission-real-net').value) || null,
+            startTime: document.getElementById('mission-start-time').value || null,
+            endTime: document.getElementById('mission-end-time').value || null
         };
 
         // Validation
@@ -990,6 +1014,43 @@ class NurseSalaryApp {
         reader.readAsText(file);
         // Réinitialiser l'input file
         event.target.value = '';
+    }
+
+    /**
+     * Migre les missions existantes avec les horaires
+     */
+    migrateSchedules() {
+        if (!confirm('Cette action va ajouter les horaires par défaut aux missions qui n\'en ont pas.\n\nContinuer ?')) {
+            return;
+        }
+
+        try {
+            const result = this.dataManager.migrateMissionsWithSchedules();
+            
+            if (result.success) {
+                if (result.migratedCount > 0) {
+                    this.showNotification(
+                        `✅ Migration réussie !<br>${result.migratedCount} mission(s) mise(s) à jour sur ${result.totalMissions}`,
+                        'success',
+                        5000
+                    );
+                    
+                    // Recharger l'affichage si on est sur le planning
+                    if (this.currentSection === 'planning') {
+                        this.loadPlanning();
+                    }
+                } else {
+                    this.showNotification(
+                        'Aucune mission à migrer. Toutes vos missions ont déjà des horaires !',
+                        'info',
+                        4000
+                    );
+                }
+            }
+        } catch (error) {
+            console.error('Erreur lors de la migration:', error);
+            this.showNotification('Erreur lors de la migration', 'error');
+        }
     }
 
     /**

@@ -158,6 +158,15 @@ body {
     color: white;
 }
 
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #2f855a;
+}
+
 /* Cartes statistiques */
 .stats-grid {
     display: grid;
