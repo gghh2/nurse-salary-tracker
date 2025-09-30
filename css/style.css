@@ -1111,7 +1111,7 @@ body {
     #planning .section-header {
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: stretch;
         flex-direction: column;
         gap: 1rem;
     }

@@ -418,10 +418,10 @@ class SalaryManager {
      */
 
     /**
-     * Génère un fichier ICS (iCalendar) pour export vers Google Calendar
-     * Par défaut, n'exporte que les missions futures (à partir d'aujourd'hui)
+     * ANCIENNE VERSION - OBSOLÈTE
+     * Utiliser la nouvelle version plus bas dans le fichier
      */
-    generateICSFile(year = null, month = null, includeAllMissions = false) {
+    generateICSFile_OLD(year = null, month = null, includeAllMissions = false) {
         let missions;
         
         // Si année et mois spécifiés, filtrer
@@ -594,6 +594,37 @@ class SalaryManager {
             exportedCount: exportedCount,
             totalCount: missions.length
         };
+    }
+    
+    /**
+     * Détermine l'heure de début par défaut selon le type de mission
+     */
+    getDefaultStartTime(rate) {
+        // Si c'est une indemnité (0h), pas d'horaire
+        if (rate.hours === 0) return '00:00';
+        
+        // Horaires typiques selon la durée
+        if (rate.hours <= 7) return '08:00';  // Missions courtes du matin
+        if (rate.hours <= 10) return '08:00'; // Journée standard
+        if (rate.hours >= 12) return '07:30'; // Missions longues (12h)
+        return '08:00'; // Défaut
+    }
+    
+    /**
+     * Détermine l'heure de fin par défaut basée sur l'heure de début et la durée
+     */
+    getDefaultEndTime(rate, startTimeStr) {
+        // Si c'est une indemnité (0h), même heure que le début
+        if (rate.hours === 0) return '00:00';
+        
+        const [startH, startM] = startTimeStr.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = startMinutes + (rate.hours * 60);
+        
+        const endH = Math.floor(endMinutes / 60) % 24; // Modulo 24 pour gérer les dépassements
+        const endM = endMinutes % 60;
+        
+        return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
     }
     
     /**
@@ -841,11 +872,7 @@ class SalaryManager {
     }
 
     /**
-     * EXPORT ICS
-     */
-
-    /**
-     * Generate ICS file content for calendar export
+     * Generate ICS file content for calendar export (VERSION CORRECTE)
      * @param {boolean} onlyFuture - If true, only export future missions (default: true)
      * @returns {Object} Object containing ICS content and stats
      */
@@ -938,17 +965,17 @@ class SalaryManager {
                            String(missionDate.getMonth() + 1).padStart(2, '0') +
                            String(missionDate.getDate()).padStart(2, '0');
 
-            // Calculate start and end times
-            const startHour = mission.startHour || '08:00';
-            const [startH, startM] = startHour.split(':');
+            // Get start and end times from mission or rate, or use defaults
+            // Priority: mission.startTime > rate.startTime > default based on hours
+            let startTimeStr = mission.startTime || rate.startTime || this.getDefaultStartTime(rate);
+            let endTimeStr = mission.endTime || rate.endTime || this.getDefaultEndTime(rate, startTimeStr);
+            
+            // Format times for ICS (HHMMSS)
+            const [startH, startM] = startTimeStr.split(':');
             const startTime = `${startH.padStart(2, '0')}${startM.padStart(2, '0')}00`;
             
-            // Calculate end time based on rate hours
-            const endDate = new Date(missionDate);
-            endDate.setHours(parseInt(startH), parseInt(startM));
-            endDate.setHours(endDate.getHours() + (rate.hours || 8));
-            const endTime = String(endDate.getHours()).padStart(2, '0') +
-                          String(endDate.getMinutes()).padStart(2, '0') + '00';
+            const [endH, endM] = endTimeStr.split(':');
+            const endTime = `${endH.padStart(2, '0')}${endM.padStart(2, '0')}00`;
 
             // Build event summary
             const summary = `${statusEmoji}${rate.acronym} - ${mission.establishment || 'Non spécifié'}`;
