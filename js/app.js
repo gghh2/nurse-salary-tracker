@@ -207,6 +207,9 @@ class NurseSalaryApp {
         if (resetDataBtn) {
             resetDataBtn.addEventListener('click', () => this.resetData());
         }
+        
+        // Google Drive
+        this.setupGoogleDriveEvents();
     }
 
     /**
@@ -248,41 +251,6 @@ class NurseSalaryApp {
                 this.loadDashboard();
             });
         }
-    }
-
-    /**
-     * Configuration des événements de sauvegarde
-     */
-    setupBackupEvents() {
-        // Export ICS
-        const exportIcsBtn = document.getElementById('export-ics-btn');
-        if (exportIcsBtn) {
-            exportIcsBtn.addEventListener('click', () => this.exportToCalendar());
-        }
-        
-        // Export
-        const exportBtn = document.getElementById('export-data-btn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => this.exportData());
-        }
-
-        // Import
-        const importBtn = document.getElementById('import-data-btn');
-        const importFile = document.getElementById('import-file');
-        
-        if (importBtn && importFile) {
-            importBtn.addEventListener('click', () => importFile.click());
-            importFile.addEventListener('change', (e) => this.importData(e));
-        }
-
-        // Reset
-        const resetBtn = document.getElementById('reset-data-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.resetData());
-        }
-        
-        // Google Drive
-        this.setupGoogleDriveEvents();
     }
 
     /**

@@ -178,6 +178,19 @@ class SalaryManager {
     }
 
     /**
+     * Retourne le label du statut d'une mission
+     */
+    getStatusLabel(status) {
+        const labels = {
+            planned: 'Planifiée',
+            confirmed: 'Confirmée',
+            completed: 'Réalisée',
+            cancelled: 'Annulée'
+        };
+        return labels[status] || status;
+    }
+
+    /**
      * STATISTIQUES ET PRÉVISIONS
      */
 
@@ -297,10 +310,11 @@ class SalaryManager {
      * Récupère les informations du mois de vue actuel du tableau de bord
      */
     getCurrentDashboardViewInfo() {
+        const viewDate = new Date(this.dashboardViewYear, this.dashboardViewMonth, 1);
         return {
             year: this.dashboardViewYear,
             month: this.dashboardViewMonth,
-            monthName: this.formatMonthName(new Date(this.dashboardViewYear, this.dashboardViewMonth, 1)),
+            monthName: this.formatMonthName(viewDate) + ' ' + this.dashboardViewYear,
             isCurrentMonth: this.dashboardViewYear === this.currentDate.getFullYear() && 
                            this.dashboardViewMonth === this.currentDate.getMonth()
         };
@@ -358,10 +372,11 @@ class SalaryManager {
      * Récupère les informations du mois de vue actuel
      */
     getCurrentViewInfo() {
+        const viewDate = new Date(this.currentViewYear, this.currentViewMonth, 1);
         return {
             year: this.currentViewYear,
             month: this.currentViewMonth,
-            monthName: this.formatMonthName(new Date(this.currentViewYear, this.currentViewMonth, 1)),
+            monthName: this.formatMonthName(viewDate) + ' ' + this.currentViewYear,
             isCurrentMonth: this.currentViewYear === this.currentDate.getFullYear() && 
                            this.currentViewMonth === this.currentDate.getMonth()
         };
@@ -809,6 +824,32 @@ class SalaryManager {
     }
 
     /**
+     * Prépare les données des tarifs pour le tableau
+     */
+    getRatesTableData() {
+        const rates = this.dataManager.getRates();
+        
+        return rates.map(rate => {
+            // Calculer le tarif horaire si nécessaire
+            const calculatedHourlyRate = this.calculateHourlyRate(rate);
+            
+            // Déterminer le salaire à afficher
+            let displaySalary = rate.salary;
+            if (!displaySalary && rate.hourlyRate && rate.hours) {
+                displaySalary = rate.hourlyRate * rate.hours;
+            }
+            
+            return {
+                ...rate,
+                hourlyRate: rate.hourlyRate || calculatedHourlyRate,
+                salary: displaySalary,
+                formattedSalary: this.formatCurrency(displaySalary || 0),
+                formattedHourlyRate: this.formatCurrency(calculatedHourlyRate)
+            };
+        });
+    }
+
+    /**
      * Recherche dans les tarifs
      */
     searchRates(searchTerm) {
@@ -819,6 +860,59 @@ class SalaryManager {
             rate.acronym.toLowerCase().includes(term) ||
             (rate.description && rate.description.toLowerCase().includes(term))
         );
+    }
+
+    /**
+     * Prépare les données pour le tableau de bord
+     */
+    getDashboardData() {
+        const viewInfo = this.getCurrentDashboardViewInfo();
+        const monthStats = this.getDashboardMonthStats();
+        const upcomingMissions = this.getUpcomingMissions();
+        
+        // Calculer les statistiques du mois
+        const totalEstimatedSalary = monthStats.totalEstimatedSalary || 0;
+        const totalRealSalary = monthStats.totalRealNetSalary || 0;
+        const totalHours = monthStats.totalHours || 0;
+        const missionCount = monthStats.missionCount || 0;
+        
+        // Calculer le tarif moyen horaire
+        const hourlyAverage = totalHours > 0 ? (totalEstimatedSalary / totalHours) : 0;
+        
+        return {
+            viewInfo: viewInfo,
+            stats: {
+                currentMonthTotal: this.formatCurrency(totalEstimatedSalary),
+                currentMonthReal: this.formatCurrency(totalRealSalary),
+                currentMonthHours: `${totalHours}h`,
+                missionsCount: missionCount,
+                hourlyAverage: this.formatCurrency(hourlyAverage)
+            },
+            upcomingMissions: upcomingMissions,
+            monthStats: monthStats
+        };
+    }
+
+    /**
+     * Prépare les données pour le planning
+     */
+    getPlanningData() {
+        const calendarData = this.generateCalendarData(this.currentViewYear, this.currentViewMonth);
+        const monthStats = this.getViewMonthStats();
+        const viewInfo = this.getCurrentViewInfo();
+
+        return {
+            calendarData,
+            monthStats: {
+                totalMissions: monthStats.missionCount,
+                totalHours: `${monthStats.totalHours}h`,
+                totalEstimatedSalary: this.formatCurrency(monthStats.totalEstimatedSalary),
+                totalRealSalary: this.formatCurrency(monthStats.totalRealNetSalary),
+                salaryDifference: this.formatCurrency(monthStats.salaryDifference),
+                salaryDifferenceClass: monthStats.salaryDifference >= 0 ? 'positive' : 'negative'
+            },
+            viewInfo
+        };
     }
 
     /**
