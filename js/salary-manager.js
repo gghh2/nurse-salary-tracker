@@ -10,9 +10,8 @@ class SalaryManager {
         this.currentViewMonth = this.currentDate.getMonth();
         this.currentViewYear = this.currentDate.getFullYear();
         
-        // État séparé pour le tableau de bord
-        this.dashboardViewMonth = this.currentDate.getMonth();
-        this.dashboardViewYear = this.currentDate.getFullYear();
+        // Année sélectionnée pour le récapitulatif annuel
+        this.selectedYearlyYear = this.currentDate.getFullYear();
     }
 
     /**
@@ -178,6 +177,19 @@ class SalaryManager {
     }
 
     /**
+     * Retourne le label du statut d'une mission
+     */
+    getStatusLabel(status) {
+        const labels = {
+            planned: 'Planifiée',
+            confirmed: 'Confirmée',
+            completed: 'Réalisée',
+            cancelled: 'Annulée'
+        };
+        return labels[status] || status;
+    }
+
+    /**
      * STATISTIQUES ET PRÉVISIONS
      */
 
@@ -186,13 +198,6 @@ class SalaryManager {
      */
     getCurrentMonthStats() {
         return this.dataManager.getMonthlyStats(this.currentDate.getFullYear(), this.currentDate.getMonth());
-    }
-
-    /**
-     * Calcule les statistiques pour le mois de vue actuel du tableau de bord
-     */
-    getDashboardMonthStats() {
-        return this.dataManager.getMonthlyStats(this.dashboardViewYear, this.dashboardViewMonth);
     }
 
     /**
@@ -243,67 +248,6 @@ class SalaryManager {
                     })
                 };
             });
-    }
-
-    /**
-     * NAVIGATION DU TABLEAU DE BORD
-     */
-
-    /**
-     * Navigue vers le mois précédent dans le tableau de bord
-     */
-    goToPreviousDashboardMonth() {
-        if (this.dashboardViewMonth === 0) {
-            this.dashboardViewMonth = 11;
-            this.dashboardViewYear--;
-        } else {
-            this.dashboardViewMonth--;
-        }
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Navigue vers le mois suivant dans le tableau de bord
-     */
-    goToNextDashboardMonth() {
-        if (this.dashboardViewMonth === 11) {
-            this.dashboardViewMonth = 0;
-            this.dashboardViewYear++;
-        } else {
-            this.dashboardViewMonth++;
-        }
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Navigue vers un mois spécifique dans le tableau de bord
-     */
-    goToDashboardMonth(year, month) {
-        this.dashboardViewYear = year;
-        this.dashboardViewMonth = month;
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Revient au mois actuel dans le tableau de bord
-     */
-    goToCurrentDashboardMonth() {
-        this.dashboardViewYear = this.currentDate.getFullYear();
-        this.dashboardViewMonth = this.currentDate.getMonth();
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Récupère les informations du mois de vue actuel du tableau de bord
-     */
-    getCurrentDashboardViewInfo() {
-        return {
-            year: this.dashboardViewYear,
-            month: this.dashboardViewMonth,
-            monthName: this.formatMonthName(new Date(this.dashboardViewYear, this.dashboardViewMonth, 1)),
-            isCurrentMonth: this.dashboardViewYear === this.currentDate.getFullYear() && 
-                           this.dashboardViewMonth === this.currentDate.getMonth()
-        };
     }
 
     /**
@@ -358,10 +302,11 @@ class SalaryManager {
      * Récupère les informations du mois de vue actuel
      */
     getCurrentViewInfo() {
+        const viewDate = new Date(this.currentViewYear, this.currentViewMonth, 1);
         return {
             year: this.currentViewYear,
             month: this.currentViewMonth,
-            monthName: this.formatMonthName(new Date(this.currentViewYear, this.currentViewMonth, 1)),
+            monthName: this.formatMonthName(viewDate) + ' ' + this.currentViewYear,
             isCurrentMonth: this.currentViewYear === this.currentDate.getFullYear() && 
                            this.currentViewMonth === this.currentDate.getMonth()
         };
@@ -414,13 +359,290 @@ class SalaryManager {
     }
 
     /**
+     * Calcule les statistiques annuelles par établissement
+     * @param {number} year - Année à analyser (optionnel, par défaut l'année sélectionnée)
+     */
+    getYearlyStatsByEstablishment(year = null) {
+        const targetYear = year || this.selectedYearlyYear;
+        const missions = this.dataManager.getMissions();
+        const rates = this.dataManager.getRates();
+        
+        // Filtrer les missions de l'année cible
+        const yearMissions = missions.filter(mission => {
+            const missionYear = new Date(mission.date).getFullYear();
+            return missionYear === targetYear && mission.status !== 'cancelled';
+        });
+        
+        // Grouper par établissement
+        const statsByEstablishment = {};
+        let globalStats = {
+            missions: 0,
+            hours: 0,
+            grossSalary: 0,
+            netSalary: 0
+        };
+        
+        yearMissions.forEach(mission => {
+            const rate = rates.find(r => r.id === mission.rateId);
+            if (!rate) return;
+            
+            // Déterminer l'établissement
+            const establishment = mission.establishment || rate.establishment || 'Non spécifié';
+            
+            // Initialiser l'établissement si nécessaire
+            if (!statsByEstablishment[establishment]) {
+                statsByEstablishment[establishment] = {
+                    name: establishment,
+                    missions: 0,
+                    hours: 0,
+                    grossSalary: 0,
+                    netSalary: 0
+                };
+            }
+            
+            // Incrémenter le nombre de missions
+            statsByEstablishment[establishment].missions++;
+            globalStats.missions++;
+            
+            // Ajouter les heures (seulement si pas exclu du comptage et pas une indemnité)
+            if (!rate.excludeFromCount && rate.hours > 0) {
+                statsByEstablishment[establishment].hours += rate.hours;
+                globalStats.hours += rate.hours;
+            }
+            
+            // Ajouter les salaires réels si disponibles
+            if (mission.realGrossSalary) {
+                statsByEstablishment[establishment].grossSalary += mission.realGrossSalary;
+                globalStats.grossSalary += mission.realGrossSalary;
+            }
+            
+            if (mission.realNetSalary) {
+                statsByEstablishment[establishment].netSalary += mission.realNetSalary;
+                globalStats.netSalary += mission.realNetSalary;
+            }
+        });
+        
+        // Calculer le tarif horaire moyen pour chaque établissement
+        // Tarif horaire = Net réel total / Heures totales travaillées
+        const establishmentArray = Object.values(statsByEstablishment).map(stats => {
+            // Le tarif horaire moyen est calculé sur TOUTES les heures travaillées
+            // (pas seulement celles avec un salaire réel)
+            const avgHourlyRate = stats.hours > 0 ? stats.netSalary / stats.hours : 0;
+            
+            return {
+                ...stats,
+                avgHourlyRate: Math.round(avgHourlyRate * 100) / 100,
+                formattedGross: this.formatCurrency(stats.grossSalary),
+                formattedNet: this.formatCurrency(stats.netSalary),
+                formattedHourly: this.formatCurrency(avgHourlyRate)
+            };
+        });
+        
+        // Trier par nombre de missions décroissant
+        establishmentArray.sort((a, b) => b.missions - a.missions);
+        
+        // Calculer le tarif horaire moyen global
+        // Net réel total / Toutes les heures travaillées
+        const globalAvgHourlyRate = globalStats.hours > 0 ? globalStats.netSalary / globalStats.hours : 0;
+        
+        return {
+            year: targetYear,
+            establishments: establishmentArray,
+            totals: {
+                missions: globalStats.missions,
+                hours: Math.round(globalStats.hours * 100) / 100,
+                grossSalary: Math.round(globalStats.grossSalary * 100) / 100,
+                netSalary: Math.round(globalStats.netSalary * 100) / 100,
+                avgHourlyRate: Math.round(globalAvgHourlyRate * 100) / 100,
+                formattedGross: this.formatCurrency(globalStats.grossSalary),
+                formattedNet: this.formatCurrency(globalStats.netSalary),
+                formattedHourly: this.formatCurrency(globalAvgHourlyRate)
+            }
+        };
+    }
+
+    /**
+     * Calcule les statistiques mensuelles par établissement
+     * @param {number} year - Année (optionnel)
+     * @param {number} month - Mois (optionnel)
+     */
+    getMonthlyStatsByEstablishment(year = null, month = null) {
+        const targetYear = year || this.currentViewYear;
+        const targetMonth = month !== null ? month : this.currentViewMonth;
+        
+        const missions = this.dataManager.getMissions();
+        const rates = this.dataManager.getRates();
+        
+        // Filtrer les missions du mois cible
+        const monthMissions = missions.filter(mission => {
+            const missionDate = new Date(mission.date);
+            return missionDate.getFullYear() === targetYear && 
+                   missionDate.getMonth() === targetMonth && 
+                   mission.status !== 'cancelled';
+        });
+        
+        // Grouper par établissement
+        const statsByEstablishment = {};
+        let globalStats = {
+            missions: 0,
+            hours: 0,
+            estimatedSalary: 0,
+            grossSalary: 0,
+            netSalary: 0
+        };
+        
+        monthMissions.forEach(mission => {
+            const rate = rates.find(r => r.id === mission.rateId);
+            if (!rate) return;
+            
+            // Déterminer l'établissement
+            const establishment = mission.establishment || rate.establishment || 'Non spécifié';
+            
+            // Initialiser l'établissement si nécessaire
+            if (!statsByEstablishment[establishment]) {
+                statsByEstablishment[establishment] = {
+                    name: establishment,
+                    missions: 0,
+                    hours: 0,
+                    estimatedSalary: 0,
+                    grossSalary: 0,
+                    netSalary: 0
+                };
+            }
+            
+            // Incrémenter le nombre de missions
+            statsByEstablishment[establishment].missions++;
+            globalStats.missions++;
+            
+            // Ajouter les heures (seulement si pas exclu du comptage et pas une indemnité)
+            if (!rate.excludeFromCount && rate.hours > 0) {
+                statsByEstablishment[establishment].hours += rate.hours;
+                globalStats.hours += rate.hours;
+            }
+            
+            // Ajouter le salaire estimé
+            let estimatedAmount = 0;
+            if (rate.salary) {
+                estimatedAmount = rate.salary;
+            } else if (rate.hourlyRate && rate.hours) {
+                estimatedAmount = rate.hourlyRate * rate.hours;
+            }
+            statsByEstablishment[establishment].estimatedSalary += estimatedAmount;
+            globalStats.estimatedSalary += estimatedAmount;
+            
+            // Ajouter les salaires réels si disponibles
+            if (mission.realGrossSalary) {
+                statsByEstablishment[establishment].grossSalary += mission.realGrossSalary;
+                globalStats.grossSalary += mission.realGrossSalary;
+            }
+            
+            if (mission.realNetSalary) {
+                statsByEstablishment[establishment].netSalary += mission.realNetSalary;
+                globalStats.netSalary += mission.realNetSalary;
+            }
+        });
+        
+        // Calculer les statistiques pour chaque établissement
+        const establishmentArray = Object.values(statsByEstablishment).map(stats => {
+            // Tarif horaire moyen net réel
+            const avgHourlyRate = stats.hours > 0 ? stats.netSalary / stats.hours : 0;
+            
+            // Écart (net réel - net estimé)
+            const difference = stats.netSalary - stats.estimatedSalary;
+            
+            return {
+                ...stats,
+                avgHourlyRate: Math.round(avgHourlyRate * 100) / 100,
+                difference: Math.round(difference * 100) / 100,
+                formattedEstimated: this.formatCurrency(stats.estimatedSalary),
+                formattedGross: this.formatCurrency(stats.grossSalary),
+                formattedNet: this.formatCurrency(stats.netSalary),
+                formattedHourly: this.formatCurrency(avgHourlyRate),
+                formattedDifference: this.formatCurrency(difference),
+                differenceClass: difference >= 0 ? 'positive' : 'negative'
+            };
+        });
+        
+        // Trier par nombre de missions décroissant
+        establishmentArray.sort((a, b) => b.missions - a.missions);
+        
+        // Calculer les totaux
+        const globalAvgHourlyRate = globalStats.hours > 0 ? globalStats.netSalary / globalStats.hours : 0;
+        const globalDifference = globalStats.netSalary - globalStats.estimatedSalary;
+        
+        return {
+            year: targetYear,
+            month: targetMonth,
+            monthName: this.formatMonthName(new Date(targetYear, targetMonth, 1)) + ' ' + targetYear,
+            establishments: establishmentArray,
+            totals: {
+                missions: globalStats.missions,
+                hours: Math.round(globalStats.hours * 100) / 100,
+                estimatedSalary: Math.round(globalStats.estimatedSalary * 100) / 100,
+                grossSalary: Math.round(globalStats.grossSalary * 100) / 100,
+                netSalary: Math.round(globalStats.netSalary * 100) / 100,
+                avgHourlyRate: Math.round(globalAvgHourlyRate * 100) / 100,
+                difference: Math.round(globalDifference * 100) / 100,
+                formattedEstimated: this.formatCurrency(globalStats.estimatedSalary),
+                formattedGross: this.formatCurrency(globalStats.grossSalary),
+                formattedNet: this.formatCurrency(globalStats.netSalary),
+                formattedHourly: this.formatCurrency(globalAvgHourlyRate),
+                formattedDifference: this.formatCurrency(globalDifference),
+                differenceClass: globalDifference >= 0 ? 'positive' : 'negative'
+            }
+        };
+    }
+
+    /**
+     * Navigation pour le récapitulatif annuel
+     */
+    goToPreviousYear() {
+        // Trouver la première année avec des missions
+        const missions = this.dataManager.getMissions();
+        
+        if (missions.length === 0) {
+            return this.selectedYearlyYear; // Pas de missions, pas de navigation
+        }
+        
+        let minYear = new Date().getFullYear();
+        
+        missions.forEach(mission => {
+            const missionYear = new Date(mission.date).getFullYear();
+            if (missionYear < minYear) {
+                minYear = missionYear;
+            }
+        });
+        
+        // Ne pas descendre en dessous de la première année avec des missions
+        if (this.selectedYearlyYear > minYear) {
+            this.selectedYearlyYear--;
+        }
+        return this.selectedYearlyYear;
+    }
+    
+    goToNextYear() {
+        const currentYear = new Date().getFullYear();
+        // Ne pas dépasser l'année en cours
+        if (this.selectedYearlyYear < currentYear) {
+            this.selectedYearlyYear++;
+        }
+        return this.selectedYearlyYear;
+    }
+    
+    setYearlyYear(year) {
+        this.selectedYearlyYear = year;
+        return this.selectedYearlyYear;
+    }
+
+    /**
      * EXPORT ET RAPPORTS
      */
 
     /**
-     * Génère un fichier ICS (iCalendar) pour export vers Google Calendar
+     * ANCIENNE VERSION - OBSOLÈTE
+     * Utiliser la nouvelle version plus bas dans le fichier
      */
-    generateICSFile(year = null, month = null) {
+    generateICSFile_OLD(year = null, month = null, includeAllMissions = false) {
         let missions;
         
         // Si année et mois spécifiés, filtrer
@@ -429,6 +651,24 @@ class SalaryManager {
         } else {
             // Sinon, toutes les missions
             missions = this.dataManager.getMissions();
+        }
+        
+        // NOUVEAU : Filtrer pour ne garder que les missions futures (sauf si includeAllMissions est true)
+        if (!includeAllMissions) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Minuit aujourd'hui pour inclure les missions d'aujourd'hui
+            const todayStr = today.getFullYear() + '-' + 
+                           String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(today.getDate()).padStart(2, '0');
+            
+            // Filtrer pour ne garder que les missions à partir d'aujourd'hui
+            const totalMissions = missions.length;
+            missions = missions.filter(mission => {
+                const missionDateStr = mission.date.split('T')[0]; // YYYY-MM-DD
+                return missionDateStr >= todayStr;
+            });
+            
+            console.log(`Export ICS: ${missions.length} missions futures sur ${totalMissions} missions totales`);
         }
         
         const rates = this.dataManager.getRates();
@@ -445,6 +685,9 @@ class SalaryManager {
             'X-WR-CALDESC:Planning des missions infirmières',
             ''  // Ligne vide après l'en-tête
         ].join('\r\n');
+        
+        // Compteur de missions exportées
+        let exportedCount = 0;
         
         // Ajouter chaque mission comme événement
         const events = [];
@@ -555,6 +798,7 @@ class SalaryManager {
             ].filter(line => line !== '').join('\r\n');
             
             events.push(eventLines);
+            exportedCount++;
         });
         
         // Joindre tous les événements avec une ligne vide entre chacun
@@ -565,7 +809,43 @@ class SalaryManager {
         // Fermer le calendrier avec une ligne vide avant
         icsContent += '\r\n\r\nEND:VCALENDAR';
         
-        return icsContent;
+        // Retourner le contenu ICS et le nombre de missions exportées
+        return {
+            content: icsContent,
+            exportedCount: exportedCount,
+            totalCount: missions.length
+        };
+    }
+    
+    /**
+     * Détermine l'heure de début par défaut selon le type de mission
+     */
+    getDefaultStartTime(rate) {
+        // Si c'est une indemnité (0h), pas d'horaire
+        if (rate.hours === 0) return '00:00';
+        
+        // Horaires typiques selon la durée
+        if (rate.hours <= 7) return '08:00';  // Missions courtes du matin
+        if (rate.hours <= 10) return '08:00'; // Journée standard
+        if (rate.hours >= 12) return '07:30'; // Missions longues (12h)
+        return '08:00'; // Défaut
+    }
+    
+    /**
+     * Détermine l'heure de fin par défaut basée sur l'heure de début et la durée
+     */
+    getDefaultEndTime(rate, startTimeStr) {
+        // Si c'est une indemnité (0h), même heure que le début
+        if (rate.hours === 0) return '00:00';
+        
+        const [startH, startM] = startTimeStr.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = startMinutes + (rate.hours * 60);
+        
+        const endH = Math.floor(endMinutes / 60) % 24; // Modulo 24 pour gérer les dépassements
+        const endM = endMinutes % 60;
+        
+        return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
     }
     
     /**
@@ -686,20 +966,12 @@ class SalaryManager {
      * Prépare les données pour l'affichage du tableau de bord
      */
     getDashboardData() {
-        const dashboardStats = this.getDashboardMonthStats();
         const upcomingMissions = this.getUpcomingMissions();
-        const viewInfo = this.getCurrentDashboardViewInfo();
+        const yearlyStats = this.getYearlyStatsByEstablishment();
         
         return {
-            stats: {
-                currentMonthTotal: this.formatCurrency(dashboardStats.totalEstimatedSalary),
-                currentMonthReal: this.formatCurrency(dashboardStats.totalRealNetSalary),
-                currentMonthHours: `${dashboardStats.totalHours}h`,
-                missionsCount: dashboardStats.missionCount,
-                hourlyAverage: this.formatCurrency(dashboardStats.averageHourlyRate)
-            },
             upcomingMissions: upcomingMissions,
-            viewInfo: viewInfo
+            yearlyStats: yearlyStats
         };
     }
 
@@ -763,6 +1035,30 @@ class SalaryManager {
     }
 
     /**
+     * Prépare les données pour le planning
+     */
+    getPlanningData() {
+        const calendarData = this.generateCalendarData(this.currentViewYear, this.currentViewMonth);
+        const monthStats = this.getViewMonthStats();
+        const viewInfo = this.getCurrentViewInfo();
+        const monthlyEstablishmentStats = this.getMonthlyStatsByEstablishment();
+
+        return {
+            calendarData,
+            monthStats: {
+                totalMissions: monthStats.missionCount,
+                totalHours: `${monthStats.totalHours}h`,
+                totalEstimatedSalary: this.formatCurrency(monthStats.totalEstimatedSalary),
+                totalRealSalary: this.formatCurrency(monthStats.totalRealNetSalary),
+                salaryDifference: this.formatCurrency(monthStats.salaryDifference),
+                salaryDifferenceClass: monthStats.salaryDifference >= 0 ? 'positive' : 'negative'
+            },
+            viewInfo,
+            monthlyEstablishmentStats
+        };
+    }
+
+    /**
      * Recherche dans les missions
      */
     searchMissions(searchTerm, filters = {}) {
@@ -810,6 +1106,176 @@ class SalaryManager {
             const rate = rates.find(r => r.id === mission.rateId);
             return { ...mission, rate };
         });
+    }
+
+    /**
+     * Generate ICS file content for calendar export (VERSION CORRECTE)
+     * @param {boolean} onlyFuture - If true, only export future missions (default: true)
+     * @returns {Object} Object containing ICS content and stats
+     */
+    generateICSFile(onlyFuture = true) {
+        const missions = this.dataManager.getMissions();
+        const rates = this.dataManager.getRates();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        
+        // Filter missions based on date
+        const filteredMissions = missions.filter(mission => {
+            if (mission.status === 'cancelled') return false;
+            
+            const missionDate = new Date(mission.date + 'T00:00:00');
+            return onlyFuture ? missionDate >= today : true;
+        });
+
+        // Sort missions by date
+        filteredMissions.sort((a, b) => a.date.localeCompare(b.date));
+
+        // ICS header
+        let icsContent = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Nurse Salary Tracker//Missions Infirmier//FR',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:Missions Infirmier',
+            'X-WR-TIMEZONE:Europe/Paris',
+            'X-WR-CALDESC:Planning des missions infirmières',
+            ''  // Empty line after header
+        ].join('\r\n');
+
+        // Add timezone definition
+        icsContent += [
+            'BEGIN:VTIMEZONE',
+            'TZID:Europe/Paris',
+            'X-LIC-LOCATION:Europe/Paris',
+            'BEGIN:DAYLIGHT',
+            'TZOFFSETFROM:+0100',
+            'TZOFFSETTO:+0200',
+            'TZNAME:CEST',
+            'DTSTART:19700329T020000',
+            'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU',
+            'END:DAYLIGHT',
+            'BEGIN:STANDARD',
+            'TZOFFSETFROM:+0200',
+            'TZOFFSETTO:+0100',
+            'TZNAME:CET',
+            'DTSTART:19701025T030000',
+            'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
+            'END:STANDARD',
+            'END:VTIMEZONE',
+            ''
+        ].join('\r\n');
+
+        // Generate unique ID for each event
+        const generateUID = (mission) => {
+            const timestamp = new Date(mission.date).getTime();
+            return `${mission.id}-${timestamp}@nurse-salary-tracker`;
+        };
+
+        // Add events
+        let exportedCount = 0;
+        const events = [];
+        
+        filteredMissions.forEach(mission => {
+            const rate = rates.find(r => r.id === mission.rateId);
+            if (!rate) return;
+
+            exportedCount++;
+
+            // Determine status emoji
+            let statusEmoji = '';
+            switch (mission.status) {
+                case 'confirmed':
+                    statusEmoji = '✅ ';
+                    break;
+                case 'planned':
+                    statusEmoji = '❓ ';
+                    break;
+                case 'completed':
+                    statusEmoji = '✔️ ';
+                    break;
+            }
+
+            // Format date for ICS (YYYYMMDD)
+            const missionDate = new Date(mission.date + 'T00:00:00');
+            const dateStr = missionDate.getFullYear() +
+                           String(missionDate.getMonth() + 1).padStart(2, '0') +
+                           String(missionDate.getDate()).padStart(2, '0');
+
+            // Get start and end times from mission or rate, or use defaults
+            // Priority: mission.startTime > rate.startTime > default based on hours
+            let startTimeStr = mission.startTime || rate.startTime || this.getDefaultStartTime(rate);
+            let endTimeStr = mission.endTime || rate.endTime || this.getDefaultEndTime(rate, startTimeStr);
+            
+            // Format times for ICS (HHMMSS)
+            const [startH, startM] = startTimeStr.split(':');
+            const startTime = `${startH.padStart(2, '0')}${startM.padStart(2, '0')}00`;
+            
+            const [endH, endM] = endTimeStr.split(':');
+            const endTime = `${endH.padStart(2, '0')}${endM.padStart(2, '0')}00`;
+
+            // Build event summary
+            const summary = `${statusEmoji}${rate.acronym} - ${mission.establishment || 'Non spécifié'}`;
+
+            // Build event description
+            let description = [];
+            description.push(`Type: ${rate.acronym}`);
+            if (rate.description) description.push(`Description: ${rate.description}`);
+            if (mission.establishment) description.push(`Établissement: ${mission.establishment}`);
+            if (mission.service) description.push(`Service: ${mission.service}`);
+            description.push(`Durée: ${rate.hours || 0}h`);
+            
+            // Add salary info if not excluded from count
+            if (!rate.excludeFromCount) {
+                if (rate.salary) {
+                    description.push(`Salaire: ${rate.salary}€`);
+                } else if (rate.hourlyRate) {
+                    description.push(`Tarif horaire: ${rate.hourlyRate}€/h`);
+                    description.push(`Salaire estimé: ${(rate.hourlyRate * (rate.hours || 0))}€`);
+                }
+            }
+            
+            if (mission.notes) description.push(`Notes: ${mission.notes}`);
+            description.push(`Statut: ${mission.status === 'confirmed' ? 'Confirmée' : 
+                                      mission.status === 'planned' ? 'Planifiée' : 
+                                      mission.status === 'completed' ? 'Réalisée' : mission.status}`);
+
+            // Create event
+            const eventLines = [
+                'BEGIN:VEVENT',
+                `UID:${generateUID(mission)}`,
+                `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
+                `DTSTART;TZID=Europe/Paris:${dateStr}T${startTime}`,
+                `DTEND;TZID=Europe/Paris:${dateStr}T${endTime}`,
+                `SUMMARY:${summary}`,
+                `DESCRIPTION:${description.join('\\n')}`,
+                mission.establishment ? `LOCATION:${mission.establishment}` : '',
+                `STATUS:${mission.status === 'confirmed' ? 'CONFIRMED' : 'TENTATIVE'}`,
+                'TRANSP:OPAQUE',
+                'END:VEVENT'
+            ].filter(line => line).join('\r\n');
+
+            events.push(eventLines);
+        });
+        
+        // Join all events with empty line between each
+        if (events.length > 0) {
+            icsContent += '\r\n' + events.join('\r\n\r\n');
+        }
+        
+        // Close calendar with empty line before
+        icsContent += '\r\n\r\nEND:VCALENDAR';
+        
+        // Return ICS content and stats
+        return {
+            content: icsContent,
+            exportedCount: exportedCount,
+            totalCount: missions.length,
+            skippedPastCount: onlyFuture ? missions.filter(m => {
+                const missionDate = new Date(m.date + 'T00:00:00');
+                return missionDate < today && m.status !== 'cancelled';
+            }).length : 0
+        };
     }
 }
 

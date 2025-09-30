@@ -173,6 +173,46 @@ class NurseSalaryApp {
     }
 
     /**
+     * Configuration des événements de sauvegarde
+     */
+    setupBackupEvents() {
+        // Export ICS (Calendar)
+        const exportIcsBtn = document.getElementById('export-ics-btn');
+        if (exportIcsBtn) {
+            exportIcsBtn.addEventListener('click', () => this.exportToCalendar());
+        }
+
+        // Export données JSON
+        const exportDataBtn = document.getElementById('export-data-btn');
+        if (exportDataBtn) {
+            exportDataBtn.addEventListener('click', () => this.exportData());
+        }
+
+        // Import données JSON
+        const importFileInput = document.getElementById('import-file');
+        const importDataBtn = document.getElementById('import-data-btn');
+        
+        if (importFileInput) {
+            importFileInput.addEventListener('change', (e) => this.importData(e));
+        }
+        
+        if (importDataBtn) {
+            importDataBtn.addEventListener('click', () => {
+                document.getElementById('import-file').click();
+            });
+        }
+
+        // Reset données
+        const resetDataBtn = document.getElementById('reset-data-btn');
+        if (resetDataBtn) {
+            resetDataBtn.addEventListener('click', () => this.resetData());
+        }
+        
+        // Google Drive
+        this.setupGoogleDriveEvents();
+    }
+
+    /**
      * Configuration de la navigation du calendrier
      */
     setupCalendarNavigation() {
@@ -193,59 +233,24 @@ class NurseSalaryApp {
                 this.loadPlanning();
             });
         }
-
-        // Navigation du tableau de bord
-        const dashboardPrevBtn = document.getElementById('dashboard-prev-month');
-        const dashboardNextBtn = document.getElementById('dashboard-next-month');
-
-        if (dashboardPrevBtn) {
-            dashboardPrevBtn.addEventListener('click', () => {
-                this.salaryManager.goToPreviousDashboardMonth();
-                this.loadDashboard();
+        
+        // Navigation du récapitulatif annuel
+        const yearlyPrevBtn = document.getElementById('yearly-prev-year');
+        const yearlyNextBtn = document.getElementById('yearly-next-year');
+        
+        if (yearlyPrevBtn) {
+            yearlyPrevBtn.addEventListener('click', () => {
+                this.salaryManager.goToPreviousYear();
+                this.refreshYearlyStats();
             });
         }
-
-        if (dashboardNextBtn) {
-            dashboardNextBtn.addEventListener('click', () => {
-                this.salaryManager.goToNextDashboardMonth();
-                this.loadDashboard();
+        
+        if (yearlyNextBtn) {
+            yearlyNextBtn.addEventListener('click', () => {
+                this.salaryManager.goToNextYear();
+                this.refreshYearlyStats();
             });
         }
-    }
-
-    /**
-     * Configuration des événements de sauvegarde
-     */
-    setupBackupEvents() {
-        // Export ICS
-        const exportIcsBtn = document.getElementById('export-ics-btn');
-        if (exportIcsBtn) {
-            exportIcsBtn.addEventListener('click', () => this.exportToCalendar());
-        }
-        
-        // Export
-        const exportBtn = document.getElementById('export-data-btn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => this.exportData());
-        }
-
-        // Import
-        const importBtn = document.getElementById('import-data-btn');
-        const importFile = document.getElementById('import-file');
-        
-        if (importBtn && importFile) {
-            importBtn.addEventListener('click', () => importFile.click());
-            importFile.addEventListener('change', (e) => this.importData(e));
-        }
-
-        // Reset
-        const resetBtn = document.getElementById('reset-data-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.resetData());
-        }
-        
-        // Google Drive
-        this.setupGoogleDriveEvents();
     }
 
     /**
@@ -551,27 +556,14 @@ class NurseSalaryApp {
     loadDashboard() {
         const dashboardData = this.salaryManager.getDashboardData();
         
-        // Mettre à jour les statistiques
-        this.updateElement('current-month-total', dashboardData.stats.currentMonthTotal);
-        this.updateElement('current-month-real', dashboardData.stats.currentMonthReal);
-        this.updateElement('current-month-hours', dashboardData.stats.currentMonthHours);
-        this.updateElement('missions-count', dashboardData.stats.missionsCount);
-        this.updateElement('hourly-average', dashboardData.stats.hourlyAverage);
-
-        // Mettre à jour les titres du mois
-        const dashboardTitle = document.getElementById('dashboard-month-title');
-        const dashboardDisplay = document.getElementById('dashboard-month-display');
-        
-        if (dashboardTitle) {
-            dashboardTitle.textContent = dashboardData.viewInfo.monthName;
-        }
-        
-        if (dashboardDisplay) {
-            dashboardDisplay.textContent = dashboardData.viewInfo.monthName;
-        }
-
-        // Afficher les prochaines missions (toujours basé sur le mois actuel)
+        // Afficher les prochaines missions
         this.displayUpcomingMissions(dashboardData.upcomingMissions);
+        
+        // Afficher le récapitulatif annuel par établissement
+        this.displayYearlyStatsByEstablishment(dashboardData.yearlyStats);
+        
+        // Mettre à jour l'état des boutons de navigation annuelle
+        this.updateYearNavigationButtons();
     }
 
     /**
@@ -607,6 +599,131 @@ class NurseSalaryApp {
         `).join('');
 
         container.innerHTML = missionsHtml;
+    }
+
+    /**
+     * Affiche le récapitulatif annuel par établissement
+     */
+    displayYearlyStatsByEstablishment(yearlyStats) {
+        if (!yearlyStats) return;
+        
+        // Mettre à jour l'année
+        const yearElement = document.getElementById('yearly-summary-year');
+        if (yearElement) {
+            yearElement.textContent = yearlyStats.year;
+        }
+        
+        // Afficher les cartes par établissement
+        const container = document.getElementById('establishment-summary-cards');
+        if (!container) return;
+        
+        if (yearlyStats.establishments.length === 0) {
+            container.innerHTML = '<p class="text-muted" style="text-align: center; padding: 2rem;">Aucune mission réalisée cette année</p>';
+        } else {
+            const cardsHtml = yearlyStats.establishments.map(establishment => `
+                <div class="establishment-card">
+                    <div class="establishment-card-header">
+                        <h4><i class="fas fa-hospital"></i> ${establishment.name}</h4>
+                    </div>
+                    <div class="establishment-stats-grid">
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.missions}</span>
+                            <span class="establishment-stat-label">Missions</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.hours}h</span>
+                            <span class="establishment-stat-label">Heures</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.formattedGross}</span>
+                            <span class="establishment-stat-label">Brut réel</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.formattedNet}</span>
+                            <span class="establishment-stat-label">Net réel</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.formattedHourly}</span>
+                            <span class="establishment-stat-label">€/h net</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = cardsHtml;
+        }
+        
+        // Mettre à jour les totaux généraux
+        this.updateElement('yearly-total-missions', yearlyStats.totals.missions);
+        this.updateElement('yearly-total-hours', `${yearlyStats.totals.hours}h`);
+        this.updateElement('yearly-total-gross', yearlyStats.totals.formattedGross);
+        this.updateElement('yearly-total-net', yearlyStats.totals.formattedNet);
+        this.updateElement('yearly-total-hourly', yearlyStats.totals.formattedHourly);
+    }
+    
+    /**
+     * Rafraîchit uniquement les statistiques annuelles
+     */
+    refreshYearlyStats() {
+        const yearlyStats = this.salaryManager.getYearlyStatsByEstablishment();
+        this.displayYearlyStatsByEstablishment(yearlyStats);
+        
+        // Mettre à jour l'état des boutons de navigation
+        this.updateYearNavigationButtons();
+    }
+    
+    /**
+     * Met à jour l'état des boutons de navigation annuelle
+     */
+    updateYearNavigationButtons() {
+        const currentYear = new Date().getFullYear();
+        const selectedYear = this.salaryManager.selectedYearlyYear;
+        
+        // Trouver la première année avec des missions
+        const missions = this.dataManager.getMissions();
+        let minYear = currentYear;
+        
+        if (missions.length === 0) {
+            // Pas de missions, désactiver les deux boutons
+            const prevBtn = document.getElementById('yearly-prev-year');
+            const nextBtn = document.getElementById('yearly-next-year');
+            
+            if (prevBtn) {
+                prevBtn.disabled = true;
+                prevBtn.style.opacity = '0.3';
+                prevBtn.style.cursor = 'not-allowed';
+            }
+            
+            if (nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.3';
+                nextBtn.style.cursor = 'not-allowed';
+            }
+            return;
+        }
+        
+        missions.forEach(mission => {
+            const missionYear = new Date(mission.date).getFullYear();
+            if (missionYear < minYear) {
+                minYear = missionYear;
+            }
+        });
+        
+        // Désactiver le bouton précédent si on est à la première année
+        const prevBtn = document.getElementById('yearly-prev-year');
+        if (prevBtn) {
+            prevBtn.disabled = selectedYear <= minYear;
+            prevBtn.style.opacity = selectedYear <= minYear ? '0.3' : '1';
+            prevBtn.style.cursor = selectedYear <= minYear ? 'not-allowed' : 'pointer';
+        }
+        
+        // Désactiver le bouton suivant si on est à l'année courante
+        const nextBtn = document.getElementById('yearly-next-year');
+        if (nextBtn) {
+            nextBtn.disabled = selectedYear >= currentYear;
+            nextBtn.style.opacity = selectedYear >= currentYear ? '0.3' : '1';
+            nextBtn.style.cursor = selectedYear >= currentYear ? 'not-allowed' : 'pointer';
+        }
     }
 
     /**
@@ -845,7 +962,9 @@ class NurseSalaryApp {
         const planningData = this.salaryManager.getPlanningData();
         this.displayCalendar(planningData.calendarData);
         this.updateMonthDisplay(planningData.viewInfo);
-        this.updateMonthSummary(planningData.monthStats);
+        
+        // Afficher le récapitulatif mensuel par établissement
+        this.displayMonthlyStatsByEstablishment(planningData.monthlyEstablishmentStats);
     }
 
     /**
@@ -907,7 +1026,6 @@ class NurseSalaryApp {
     updateMonthDisplay(viewInfo) {
         const display = document.getElementById('current-month-display');
         const planningTitle = document.getElementById('planning-month-title');
-        const planningSummaryTitle = document.getElementById('planning-summary-month');
         
         if (display) {
             display.textContent = viewInfo.monthName;
@@ -916,33 +1034,80 @@ class NurseSalaryApp {
         if (planningTitle) {
             planningTitle.textContent = viewInfo.monthName;
         }
-        
-        if (planningSummaryTitle) {
-            planningSummaryTitle.textContent = viewInfo.monthName;
-        }
     }
-
+    
     /**
-     * Met à jour le résumé mensuel
+     * Affiche le récapitulatif mensuel par établissement
      */
-    updateMonthSummary(monthStats) {
-        this.updateElement('month-missions-total', monthStats.totalMissions);
-        this.updateElement('month-hours-total', monthStats.totalHours);
-        this.updateElement('month-salary-total', monthStats.totalEstimatedSalary);
-        this.updateElement('month-real-salary-total', monthStats.totalRealSalary);
+    displayMonthlyStatsByEstablishment(monthlyStats) {
+        if (!monthlyStats) return;
         
-        // Gérer l'affichage de l'écart avec couleur
-        const differenceElement = document.getElementById('month-salary-difference');
+        // Afficher les cartes par établissement
+        const container = document.getElementById('monthly-establishment-cards');
+        if (!container) return;
+        
+        if (monthlyStats.establishments.length === 0) {
+            container.innerHTML = '<p class="text-muted" style="text-align: center; padding: 2rem;">Aucune mission ce mois-ci</p>';
+        } else {
+            const cardsHtml = monthlyStats.establishments.map(establishment => {
+                const differenceClass = establishment.difference >= 0 ? 'difference-positive' : 'difference-negative';
+                
+                return `
+                    <div class="monthly-establishment-card">
+                        <div class="establishment-card-header">
+                            <h4><i class="fas fa-hospital"></i> ${establishment.name}</h4>
+                        </div>
+                        <div class="establishment-stats-grid-extended">
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.missions}</span>
+                                <span class="establishment-stat-label">Missions</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.hours}h</span>
+                                <span class="establishment-stat-label">Heures</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedEstimated}</span>
+                                <span class="establishment-stat-label">Net estimé</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedGross}</span>
+                                <span class="establishment-stat-label">Brut réel</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedNet}</span>
+                                <span class="establishment-stat-label">Net réel</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedHourly}</span>
+                                <span class="establishment-stat-label">€/h net</span>
+                            </div>
+                            <div class="establishment-stat ${differenceClass}">
+                                <span class="establishment-stat-value">${establishment.formattedDifference}</span>
+                                <span class="establishment-stat-label">Écart</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = cardsHtml;
+        }
+        
+        // Mettre à jour les totaux généraux
+        this.updateElement('monthly-total-missions', monthlyStats.totals.missions);
+        this.updateElement('monthly-total-hours', `${monthlyStats.totals.hours}h`);
+        this.updateElement('monthly-total-estimated', monthlyStats.totals.formattedEstimated);
+        this.updateElement('monthly-total-gross', monthlyStats.totals.formattedGross);
+        this.updateElement('monthly-total-net', monthlyStats.totals.formattedNet);
+        this.updateElement('monthly-total-hourly', monthlyStats.totals.formattedHourly);
+        
+        // Gérer l'affichage de l'écart avec la classe appropriée
+        const differenceElement = document.getElementById('monthly-total-difference');
         if (differenceElement) {
-            differenceElement.textContent = monthStats.salaryDifference;
-            
-            // Retirer les anciennes classes
-            differenceElement.classList.remove('positive', 'negative');
-            
-            // Ajouter la classe appropriée
-            if (monthStats.salaryDifferenceClass) {
-                differenceElement.classList.add(monthStats.salaryDifferenceClass);
-            }
+            differenceElement.textContent = monthlyStats.totals.formattedDifference;
+            differenceElement.parentElement.classList.remove('difference-positive', 'difference-negative');
+            differenceElement.parentElement.classList.add(monthlyStats.totals.differenceClass === 'positive' ? 'difference-positive' : 'difference-negative');
         }
     }
 
@@ -968,6 +1133,8 @@ class NurseSalaryApp {
         const establishmentInput = document.getElementById('mission-establishment');
         const startTimeInput = document.getElementById('mission-start-time');
         const endTimeInput = document.getElementById('mission-end-time');
+        const hourlyRateInput = document.getElementById('mission-hourly-rate');
+        const estimatedSalaryInput = document.getElementById('mission-estimated-salary');
         
         if (!rateSelect || !establishmentInput) return;
 
@@ -994,6 +1161,14 @@ class NurseSalaryApp {
                     }
                     if (rate.endTime && endTimeInput) {
                         endTimeInput.value = rate.endTime;
+                    }
+                    
+                    // Auto-compléter le tarif horaire et le salaire estimé
+                    if (rate.hourlyRate && hourlyRateInput) {
+                        hourlyRateInput.value = rate.hourlyRate;
+                    }
+                    if (rate.salary && estimatedSalaryInput) {
+                        estimatedSalaryInput.value = rate.salary;
                     }
                 }
             }
@@ -1040,6 +1215,20 @@ class NurseSalaryApp {
                 document.getElementById('mission-real-net').value = mission.realNetSalary || '';
                 document.getElementById('mission-start-time').value = mission.startTime || '';
                 document.getElementById('mission-end-time').value = mission.endTime || '';
+                
+                // Pré-remplir les tarifs estimés (depuis la mission ou depuis le tarif)
+                const rate = this.dataManager.getRateById(mission.rateId);
+                if (mission.hourlyRate !== undefined) {
+                    document.getElementById('mission-hourly-rate').value = mission.hourlyRate || '';
+                } else if (rate && rate.hourlyRate) {
+                    document.getElementById('mission-hourly-rate').value = rate.hourlyRate;
+                }
+                
+                if (mission.estimatedSalary !== undefined) {
+                    document.getElementById('mission-estimated-salary').value = mission.estimatedSalary || '';
+                } else if (rate && rate.salary) {
+                    document.getElementById('mission-estimated-salary').value = rate.salary;
+                }
                 
                 // Afficher le bouton supprimer
                 if (deleteBtn) {
@@ -1140,6 +1329,8 @@ class NurseSalaryApp {
             service: document.getElementById('mission-service').value,
             status: document.getElementById('mission-status').value,
             notes: document.getElementById('mission-notes').value,
+            hourlyRate: parseFloat(document.getElementById('mission-hourly-rate').value) || null,
+            estimatedSalary: parseFloat(document.getElementById('mission-estimated-salary').value) || null,
             realGrossSalary: parseFloat(document.getElementById('mission-real-gross').value) || null,
             realNetSalary: parseFloat(document.getElementById('mission-real-net').value) || null,
             startTime: document.getElementById('mission-start-time').value || null,
@@ -1239,8 +1430,17 @@ class NurseSalaryApp {
                 return;
             }
             
-            // Générer le fichier ICS
-            const icsContent = this.salaryManager.generateICSFile();
+            // Générer le fichier ICS (uniquement missions futures par défaut)
+            const icsResult = this.salaryManager.generateICSFile(true);
+            
+            if (icsResult.exportedCount === 0) {
+                this.showNotification(
+                    '⚠️ Aucune mission future à exporter.<br>' +
+                    'Toutes vos missions sont dans le passé.',
+                    'warning'
+                );
+                return;
+            }
             
             // Nom du fichier avec timestamp
             const now = new Date();
@@ -1248,15 +1448,19 @@ class NurseSalaryApp {
             const filename = `missions-infirmier-${dateStr}.ics`;
             
             // Télécharger le fichier
-            this.downloadFile(icsContent, filename, 'text/calendar');
+            this.downloadFile(icsResult.content, filename, 'text/calendar');
             
-            this.showNotification(
-                `✅ Fichier ICS téléchargé !<br><br>` +
-                `📱 <strong>Sur mobile :</strong> Ouvrir le fichier pour l'ajouter à Google Calendar<br>` +
-                `💻 <strong>Sur PC :</strong> Google Calendar → ⚙️ Paramètres → Importer et exporter → Importer`,
-                'success',
-                8000
-            );
+            // Message de confirmation avec statistiques
+            let message = `✅ <strong>${icsResult.exportedCount} mission(s) exportée(s) !</strong><br><br>`;
+            
+            if (icsResult.skippedPastCount > 0) {
+                message += `ℹ️ ${icsResult.skippedPastCount} mission(s) passée(s) ignorée(s)<br><br>`;
+            }
+            
+            message += `📱 <strong>Sur mobile :</strong> Ouvrir le fichier pour l'ajouter à votre calendrier<br>` +
+                      `💻 <strong>Sur PC :</strong> Google Calendar → ⚙️ Paramètres → Importer et exporter → Importer`;
+            
+            this.showNotification(message, 'success', 8000);
             
         } catch (error) {
             console.error('Erreur lors de l\'export ICS:', error);

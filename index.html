@@ -56,62 +56,57 @@
             
             <!-- Section Tableau de bord -->
             <section id="dashboard" class="app-section active">
-                <div class="section-header">
-                    <div class="planning-controls">
-                        <div class="month-selector">
-                            <button id="dashboard-prev-month"><i class="fas fa-chevron-left"></i></button>
-                            <span id="dashboard-month-display">septembre</span>
-                            <button id="dashboard-next-month"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fas fa-euro-sign"></i>
-                        <div>
-                            <span class="stat-value" id="current-month-total">0,00 €</span>
-                            <span class="stat-label">Estimé net ce mois</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <div>
-                            <span class="stat-value" id="current-month-real">0,00 €</span>
-                            <span class="stat-label">Réel net ce mois</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <i class="fas fa-clock"></i>
-                        <div>
-                            <span class="stat-value" id="current-month-hours">0h</span>
-                            <span class="stat-label">Heures ce mois</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <i class="fas fa-calendar-check"></i>
-                        <div>
-                            <span class="stat-value" id="missions-count">0</span>
-                            <span class="stat-label">Missions planifiées</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <i class="fas fa-chart-line"></i>
-                        <div>
-                            <span class="stat-value" id="hourly-average">0,00 €</span>
-                            <span class="stat-label">Tarif moyen/h</span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="recent-missions">
                     <h3>Prochaines missions</h3>
                     <div id="upcoming-missions" class="missions-list">
                         <!-- Les missions seront ajoutées dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Récapitulatif annuel par établissement -->
+                <div class="yearly-summary">
+                    <h3>
+                        <i class="fas fa-chart-bar"></i> 
+                        Récapitulatif annuel 
+                        <div class="year-selector">
+                            <button id="yearly-prev-year" class="year-nav-btn"><i class="fas fa-chevron-left"></i></button>
+                            <span id="yearly-summary-year" class="year-display">2025</span>
+                            <button id="yearly-next-year" class="year-nav-btn"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </h3>
+                    <div class="establishment-summary-container">
+                        <div id="establishment-summary-cards">
+                            <!-- Les cartes par établissement seront ajoutées dynamiquement -->
+                        </div>
+                        
+                        <!-- Totaux généraux -->
+                        <div class="yearly-total-card">
+                            <div class="establishment-card-header">
+                                <h4><i class="fas fa-sigma"></i> TOTAL GÉNÉRAL</h4>
+                            </div>
+                            <div class="establishment-stats-grid">
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-missions">0</span>
+                                    <span class="establishment-stat-label">Missions</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-hours">0h</span>
+                                    <span class="establishment-stat-label">Heures</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-gross">0,00 €</span>
+                                    <span class="establishment-stat-label">Brut réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-net">0,00 €</span>
+                                    <span class="establishment-stat-label">Net réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-hourly">0,00 €</span>
+                                    <span class="establishment-stat-label">€/h net</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -163,28 +158,49 @@
                     <!-- Le calendrier sera généré dynamiquement -->
                 </div>
 
-                <div class="month-summary">
-                    <h3>Résumé du mois de <span id="planning-summary-month">septembre</span></h3>
-                    <div class="summary-stats">
-                        <div class="summary-item">
-                            <span>Total missions:</span>
-                            <span id="month-missions-total">0</span>
+                <!-- Récapitulatif mensuel par établissement -->
+                <div class="monthly-establishment-summary">
+                    <h3><i class="fas fa-building"></i> Détail par établissement</h3>
+                    <div class="establishment-summary-container">
+                        <div id="monthly-establishment-cards">
+                            <!-- Les cartes par établissement seront ajoutées dynamiquement -->
                         </div>
-                        <div class="summary-item">
-                            <span>Total heures:</span>
-                            <span id="month-hours-total">0h</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Salaire estimé net:</span>
-                            <span id="month-salary-total">0,00 €</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Salaire réel net:</span>
-                            <span id="month-real-salary-total">0,00 €</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Écart (réel - estimé):</span>
-                            <span id="month-salary-difference">0,00 €</span>
+                        
+                        <!-- Totaux généraux du mois -->
+                        <div class="monthly-total-card">
+                            <div class="establishment-card-header">
+                                <h4><i class="fas fa-sigma"></i> TOTAL DU MOIS</h4>
+                            </div>
+                            <div class="establishment-stats-grid-extended">
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-missions">0</span>
+                                    <span class="establishment-stat-label">Missions</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-hours">0h</span>
+                                    <span class="establishment-stat-label">Heures</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-estimated">0,00 €</span>
+                                    <span class="establishment-stat-label">Net estimé</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-gross">0,00 €</span>
+                                    <span class="establishment-stat-label">Brut réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-net">0,00 €</span>
+                                    <span class="establishment-stat-label">Net réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-hourly">0,00 €</span>
+                                    <span class="establishment-stat-label">€/h net</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-difference">0,00 €</span>
+                                    <span class="establishment-stat-label">Écart</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -396,6 +412,24 @@
                 <div class="form-group">
                     <label for="mission-notes">Notes</label>
                     <textarea id="mission-notes" placeholder="Notes optionnelles..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <h4 style="margin-bottom: 1rem; color: var(--primary-color); border-bottom: 1px solid var(--medium-gray); padding-bottom: 0.5rem;">
+                        Tarifs estimés (depuis la page Tarifs, ajustables)
+                    </h4>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mission-hourly-rate">Tarif horaire net (€/h)</label>
+                    <input type="number" id="mission-hourly-rate" step="0.001" placeholder="Ex: 14.620">
+                    <small style="color: #6c757d; font-size: 0.8rem;">Pré-rempli depuis le tarif, modifiable pour cette mission</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mission-estimated-salary">Salaire estimé net (€)</label>
+                    <input type="number" id="mission-estimated-salary" step="0.001" placeholder="Ex: 102.330">
+                    <small style="color: #6c757d; font-size: 0.8rem;">Pré-rempli depuis le tarif, modifiable pour cette mission</small>
                 </div>
                 
                 <div class="form-group">

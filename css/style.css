@@ -412,7 +412,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    max-width: 80%;
 }
 
 .mission-item:hover {
@@ -1111,7 +1111,7 @@ body {
     #planning .section-header {
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: stretch;
         flex-direction: column;
         gap: 1rem;
     }
@@ -1206,5 +1206,287 @@ body {
     /* Performance optimization pour le scroll */
     .rates-table-container {
         will-change: scroll-position;
+    }
+    
+    /* ==================================== */
+    /* 5. RÉCAPITULATIF ANNUEL PAR ÉTABLISSEMENT */
+    /* ==================================== */
+    
+    .yearly-summary {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .yearly-summary h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .year-selector {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 0.25rem 0.5rem;
+        margin-left: auto;
+    }
+    
+    .year-nav-btn {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+        font-size: 0.875rem;
+    }
+    
+    .year-nav-btn:hover:not(:disabled) {
+        background-color: rgba(44, 82, 130, 0.1);
+    }
+    
+    .year-nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+    
+    .year-display {
+        font-weight: 700;
+        color: var(--text-color);
+        min-width: 50px;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+    
+    .establishment-summary-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    #establishment-summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .establishment-card,
+    .yearly-total-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .establishment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .establishment-card-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        padding: 1rem;
+    }
+    
+    .establishment-card-header h4 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .establishment-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .establishment-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0.5rem;
+    }
+    
+    .establishment-stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+    }
+    
+    .establishment-stat-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Total général avec style distinct */
+    .yearly-total-card {
+        background: linear-gradient(135deg, #f7fafc, #e2e8f0);
+        border: 2px solid var(--primary-color);
+        margin-top: 1rem;
+    }
+    
+    .yearly-total-card .establishment-card-header {
+        background: linear-gradient(135deg, #764ba2, #667eea);
+    }
+    
+    .yearly-total-card .establishment-stat-value {
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Responsive pour le récapitulatif */
+    @media (max-width: 768px) {
+        #establishment-summary-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .establishment-stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .establishment-stat-value {
+            font-size: 1rem;
+        }
+        
+        .yearly-total-card .establishment-stat-value {
+            font-size: 1.25rem;
+        }
+        
+        .yearly-summary h3 {
+            justify-content: space-between;
+        }
+        
+        .year-selector {
+            margin-left: 0;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .establishment-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    /* ==================================== */
+    /* 6. RÉCAPITULATIF MENSUEL PAR ÉTABLISSEMENT */
+    /* ==================================== */
+    
+    .monthly-establishment-summary {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .monthly-establishment-summary h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .monthly-establishment-summary h3 span {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    #monthly-establishment-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .monthly-establishment-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .monthly-establishment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .establishment-stats-grid-extended {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    /* Total mensuel avec style distinct */
+    .monthly-total-card {
+        background: linear-gradient(135deg, #f7fafc, #e2e8f0);
+        border: 2px solid var(--primary-color);
+        margin-top: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .monthly-total-card .establishment-card-header {
+        background: linear-gradient(135deg, #764ba2, #667eea);
+    }
+    
+    .monthly-total-card .establishment-stat-value {
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Coloration spéciale pour l'écart */
+    .establishment-stat.difference-negative .establishment-stat-value {
+        color: #e53e3e !important;
+        font-weight: 700;
+    }
+    
+    .establishment-stat.difference-positive .establishment-stat-value {
+        color: #38a169 !important;
+        font-weight: 700;
+    }
+    
+    /* Responsive pour le récapitulatif mensuel */
+    @media (max-width: 768px) {
+        #monthly-establishment-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .establishment-stats-grid-extended {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .monthly-total-card .establishment-stat-value {
+            font-size: 1.1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .establishment-stats-grid-extended {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 }
