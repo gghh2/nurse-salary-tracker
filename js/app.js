@@ -243,6 +243,259 @@ class NurseSalaryApp {
         if (resetBtn) {
             resetBtn.addEventListener('click', () => this.resetData());
         }
+        
+        // Google Drive
+        this.setupGoogleDriveEvents();
+    }
+
+    /**
+     * Configuration des événements Google Drive
+     */
+    setupGoogleDriveEvents() {
+        // Bouton de sauvegarde sur Drive
+        const backupBtn = document.getElementById('backup-to-drive-btn');
+        if (backupBtn) {
+            backupBtn.addEventListener('click', () => this.backupToDrive());
+        }
+        
+        // Bouton de restauration depuis Drive
+        const restoreBtn = document.getElementById('restore-from-drive-btn');
+        if (restoreBtn) {
+            restoreBtn.addEventListener('click', () => this.restoreFromDrive());
+        }
+        
+        // Bouton de configuration
+        const configBtn = document.getElementById('configure-drive-btn');
+        if (configBtn) {
+            configBtn.addEventListener('click', () => this.openDriveConfigModal());
+        }
+        
+        // Modale de configuration
+        const configForm = document.getElementById('drive-config-form');
+        if (configForm) {
+            configForm.addEventListener('submit', (e) => this.handleDriveConfig(e));
+        }
+        
+        const cancelConfigBtn = document.getElementById('cancel-drive-config');
+        if (cancelConfigBtn) {
+            cancelConfigBtn.addEventListener('click', () => this.closeModal('drive-config-modal'));
+        }
+        
+        const testBtn = document.getElementById('test-drive-connection');
+        if (testBtn) {
+            testBtn.addEventListener('click', () => this.testDriveConnection());
+        }
+        
+        // Fermeture de la modale
+        const modalClose = document.querySelector('#drive-config-modal .modal-close');
+        if (modalClose) {
+            modalClose.addEventListener('click', () => this.closeModal('drive-config-modal'));
+        }
+    }
+    
+    /**
+     * Sauvegarder sur Google Drive
+     */
+    async backupToDrive() {
+        try {
+            // Vérifier la configuration
+            if (!window.googleDriveSync.isConfigured()) {
+                this.showNotification(
+                    '⚠️ Google Drive n\'est pas configuré. Cliquez sur "Configurer Google Drive" pour commencer.',
+                    'warning'
+                );
+                return;
+            }
+            
+            // Afficher le statut
+            this.showNotification('🔄 Sauvegarde en cours...', 'info');
+            
+            // Effectuer la sauvegarde
+            const result = await window.googleDriveSync.backup();
+            
+            // Mettre à jour l'interface
+            this.updateDriveSyncStatus();
+            
+            // Afficher le succès
+            this.showNotification(
+                '✅ Sauvegarde réussie sur Google Drive !',
+                'success',
+                5000
+            );
+            
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde:', error);
+            this.showNotification(
+                `❌ Erreur lors de la sauvegarde : ${error.message}`,
+                'error'
+            );
+        }
+    }
+    
+    /**
+     * Restaurer depuis Google Drive
+     */
+    async restoreFromDrive() {
+        try {
+            // Vérifier la configuration
+            if (!window.googleDriveSync.isConfigured()) {
+                this.showNotification(
+                    '⚠️ Google Drive n\'est pas configuré. Cliquez sur "Configurer Google Drive" pour commencer.',
+                    'warning'
+                );
+                return;
+            }
+            
+            // Afficher le statut
+            this.showNotification('🔄 Récupération en cours...', 'info');
+            
+            // Effectuer la restauration
+            const result = await window.googleDriveSync.restore();
+            
+            if (result.success) {
+                // Recharger l'interface
+                this.loadSectionContent(this.currentSection);
+                
+                // Mettre à jour le statut
+                this.updateDriveSyncStatus();
+                
+                // Afficher le succès
+                this.showNotification(
+                    `✅ ${result.message}`,
+                    'success',
+                    8000
+                );
+            } else {
+                this.showNotification(result.message, 'warning');
+            }
+            
+        } catch (error) {
+            console.error('Erreur lors de la restauration:', error);
+            this.showNotification(
+                `❌ Erreur lors de la restauration : ${error.message}`,
+                'error'
+            );
+        }
+    }
+    
+    /**
+     * Ouvrir la modale de configuration Google Drive
+     */
+    openDriveConfigModal() {
+        const modal = document.getElementById('drive-config-modal');
+        if (!modal) return;
+        
+        // Pré-remplir les champs si déjà configuré
+        const config = window.googleDriveSync;
+        if (config.scriptUrl) {
+            document.getElementById('script-url').value = config.scriptUrl;
+        }
+        if (config.token) {
+            document.getElementById('script-token').value = config.token;
+        }
+        
+        this.showModal('drive-config-modal');
+    }
+    
+    /**
+     * Gérer la soumission de la configuration Google Drive
+     */
+    handleDriveConfig(e) {
+        e.preventDefault();
+        
+        const scriptUrl = document.getElementById('script-url').value;
+        const token = document.getElementById('script-token').value;
+        
+        if (!scriptUrl || !token) {
+            this.showNotification('⚠️ Veuillez remplir tous les champs', 'warning');
+            return;
+        }
+        
+        // Sauvegarder la configuration
+        window.googleDriveSync.saveConfig(scriptUrl, token);
+        
+        // Fermer la modale
+        this.closeModal('drive-config-modal');
+        
+        // Mettre à jour le statut
+        this.updateDriveSyncStatus();
+        
+        this.showNotification(
+            '✅ Configuration Google Drive enregistrée ! Vous pouvez maintenant sauvegarder et restaurer.',
+            'success',
+            5000
+        );
+    }
+    
+    /**
+     * Tester la connexion Google Drive
+     */
+    async testDriveConnection() {
+        try {
+            // Récupérer les valeurs du formulaire
+            const scriptUrl = document.getElementById('script-url').value;
+            const token = document.getElementById('script-token').value;
+            
+            if (!scriptUrl || !token) {
+                this.showNotification('⚠️ Veuillez remplir l\'URL et le token', 'warning');
+                return;
+            }
+            
+            // Sauvegarder temporairement la config pour le test
+            const oldUrl = window.googleDriveSync.scriptUrl;
+            const oldToken = window.googleDriveSync.token;
+            
+            window.googleDriveSync.scriptUrl = scriptUrl;
+            window.googleDriveSync.token = token;
+            
+            this.showNotification('🔄 Test de connexion en cours...', 'info');
+            
+            // Tester la connexion
+            const success = await window.googleDriveSync.testConnection();
+            
+            if (success) {
+                this.showNotification(
+                    '✅ Connexion réussie ! La configuration est valide.',
+                    'success'
+                );
+            } else {
+                this.showNotification(
+                    '❌ Échec de la connexion. Vérifiez l\'URL et le token.',
+                    'error'
+                );
+                // Restaurer l'ancienne config si le test échoue
+                window.googleDriveSync.scriptUrl = oldUrl;
+                window.googleDriveSync.token = oldToken;
+            }
+            
+        } catch (error) {
+            console.error('Erreur lors du test:', error);
+            this.showNotification(
+                `❌ Erreur lors du test : ${error.message}`,
+                'error'
+            );
+        }
+    }
+    
+    /**
+     * Mettre à jour le statut de synchronisation Google Drive
+     */
+    updateDriveSyncStatus() {
+        const statusIcon = document.getElementById('sync-status-icon');
+        const statusText = document.getElementById('sync-status-text');
+        
+        if (!statusIcon || !statusText) return;
+        
+        const status = window.googleDriveSync.getSyncStatus();
+        
+        statusIcon.textContent = status.icon;
+        statusText.textContent = status.text;
+        
+        // Mettre à jour la classe CSS du conteneur
+        const statusContainer = document.getElementById('sync-status');
+        if (statusContainer) {
+            statusContainer.className = `sync-status ${status.class}`;
+        }
     }
 
     /**
@@ -969,6 +1222,9 @@ class NurseSalaryApp {
     loadBackup() {
         const storageInfo = this.dataManager.getStorageInfo();
         console.log('Informations de stockage:', storageInfo);
+        
+        // Mettre à jour le statut Google Drive
+        this.updateDriveSyncStatus();
     }
 
     /**

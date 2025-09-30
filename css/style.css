@@ -355,7 +355,7 @@ body {
 
 .calendar-day {
     min-height: 120px;
-    padding: 0.5rem;
+    padding: 0.2rem;
     border: 1px solid var(--medium-gray);
     background: white;
     cursor: pointer;
