@@ -117,7 +117,15 @@
 
                 <!-- Récapitulatif annuel par établissement -->
                 <div class="yearly-summary">
-                    <h3><i class="fas fa-chart-bar"></i> Récapitulatif annuel <span id="yearly-summary-year">2025</span></h3>
+                    <h3>
+                        <i class="fas fa-chart-bar"></i> 
+                        Récapitulatif annuel 
+                        <div class="year-selector">
+                            <button id="yearly-prev-year" class="year-nav-btn"><i class="fas fa-chevron-left"></i></button>
+                            <span id="yearly-summary-year" class="year-display">2025</span>
+                            <button id="yearly-next-year" class="year-nav-btn"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </h3>
                     <div class="establishment-summary-container">
                         <div id="establishment-summary-cards">
                             <!-- Les cartes par établissement seront ajoutées dynamiquement -->

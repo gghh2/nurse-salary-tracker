@@ -251,6 +251,24 @@ class NurseSalaryApp {
                 this.loadDashboard();
             });
         }
+        
+        // Navigation du récapitulatif annuel
+        const yearlyPrevBtn = document.getElementById('yearly-prev-year');
+        const yearlyNextBtn = document.getElementById('yearly-next-year');
+        
+        if (yearlyPrevBtn) {
+            yearlyPrevBtn.addEventListener('click', () => {
+                this.salaryManager.goToPreviousYear();
+                this.refreshYearlyStats();
+            });
+        }
+        
+        if (yearlyNextBtn) {
+            yearlyNextBtn.addEventListener('click', () => {
+                this.salaryManager.goToNextYear();
+                this.refreshYearlyStats();
+            });
+        }
     }
 
     /**
@@ -580,6 +598,9 @@ class NurseSalaryApp {
         
         // Afficher le récapitulatif annuel par établissement
         this.displayYearlyStatsByEstablishment(dashboardData.yearlyStats);
+        
+        // Mettre à jour l'état des boutons de navigation annuelle
+        this.updateYearNavigationButtons();
     }
 
     /**
@@ -675,6 +696,71 @@ class NurseSalaryApp {
         this.updateElement('yearly-total-gross', yearlyStats.totals.formattedGross);
         this.updateElement('yearly-total-net', yearlyStats.totals.formattedNet);
         this.updateElement('yearly-total-hourly', yearlyStats.totals.formattedHourly);
+    }
+    
+    /**
+     * Rafraîchit uniquement les statistiques annuelles
+     */
+    refreshYearlyStats() {
+        const yearlyStats = this.salaryManager.getYearlyStatsByEstablishment();
+        this.displayYearlyStatsByEstablishment(yearlyStats);
+        
+        // Mettre à jour l'état des boutons de navigation
+        this.updateYearNavigationButtons();
+    }
+    
+    /**
+     * Met à jour l'état des boutons de navigation annuelle
+     */
+    updateYearNavigationButtons() {
+        const currentYear = new Date().getFullYear();
+        const selectedYear = this.salaryManager.selectedYearlyYear;
+        
+        // Trouver la première année avec des missions
+        const missions = this.dataManager.getMissions();
+        let minYear = currentYear;
+        
+        if (missions.length === 0) {
+            // Pas de missions, désactiver les deux boutons
+            const prevBtn = document.getElementById('yearly-prev-year');
+            const nextBtn = document.getElementById('yearly-next-year');
+            
+            if (prevBtn) {
+                prevBtn.disabled = true;
+                prevBtn.style.opacity = '0.3';
+                prevBtn.style.cursor = 'not-allowed';
+            }
+            
+            if (nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.3';
+                nextBtn.style.cursor = 'not-allowed';
+            }
+            return;
+        }
+        
+        missions.forEach(mission => {
+            const missionYear = new Date(mission.date).getFullYear();
+            if (missionYear < minYear) {
+                minYear = missionYear;
+            }
+        });
+        
+        // Désactiver le bouton précédent si on est à la première année
+        const prevBtn = document.getElementById('yearly-prev-year');
+        if (prevBtn) {
+            prevBtn.disabled = selectedYear <= minYear;
+            prevBtn.style.opacity = selectedYear <= minYear ? '0.3' : '1';
+            prevBtn.style.cursor = selectedYear <= minYear ? 'not-allowed' : 'pointer';
+        }
+        
+        // Désactiver le bouton suivant si on est à l'année courante
+        const nextBtn = document.getElementById('yearly-next-year');
+        if (nextBtn) {
+            nextBtn.disabled = selectedYear >= currentYear;
+            nextBtn.style.opacity = selectedYear >= currentYear ? '0.3' : '1';
+            nextBtn.style.cursor = selectedYear >= currentYear ? 'not-allowed' : 'pointer';
+        }
     }
 
     /**

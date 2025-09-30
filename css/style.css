@@ -1224,11 +1224,45 @@ body {
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
     
-    .yearly-summary h3 span {
-        font-weight: 600;
+    .year-selector {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 0.25rem 0.5rem;
+        margin-left: auto;
+    }
+    
+    .year-nav-btn {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+        font-size: 0.875rem;
+    }
+    
+    .year-nav-btn:hover:not(:disabled) {
+        background-color: rgba(44, 82, 130, 0.1);
+    }
+    
+    .year-nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+    
+    .year-display {
+        font-weight: 700;
         color: var(--text-color);
+        min-width: 50px;
+        text-align: center;
+        font-size: 1.1rem;
     }
     
     .establishment-summary-container {
@@ -1336,6 +1370,14 @@ body {
         
         .yearly-total-card .establishment-stat-value {
             font-size: 1.25rem;
+        }
+        
+        .yearly-summary h3 {
+            justify-content: space-between;
+        }
+        
+        .year-selector {
+            margin-left: 0;
         }
     }
     

@@ -13,6 +13,9 @@ class SalaryManager {
         // État séparé pour le tableau de bord
         this.dashboardViewMonth = this.currentDate.getMonth();
         this.dashboardViewYear = this.currentDate.getFullYear();
+        
+        // Année sélectionnée pour le récapitulatif annuel
+        this.selectedYearlyYear = this.currentDate.getFullYear();
     }
 
     /**
@@ -430,16 +433,17 @@ class SalaryManager {
 
     /**
      * Calcule les statistiques annuelles par établissement
+     * @param {number} year - Année à analyser (optionnel, par défaut l'année sélectionnée)
      */
-    getYearlyStatsByEstablishment() {
-        const currentYear = new Date().getFullYear();
+    getYearlyStatsByEstablishment(year = null) {
+        const targetYear = year || this.selectedYearlyYear;
         const missions = this.dataManager.getMissions();
         const rates = this.dataManager.getRates();
         
-        // Filtrer les missions de l'année en cours
+        // Filtrer les missions de l'année cible
         const yearMissions = missions.filter(mission => {
             const missionYear = new Date(mission.date).getFullYear();
-            return missionYear === currentYear && mission.status !== 'cancelled';
+            return missionYear === targetYear && mission.status !== 'cancelled';
         });
         
         // Grouper par établissement
@@ -515,7 +519,7 @@ class SalaryManager {
         const globalAvgHourlyRate = globalStats.hours > 0 ? globalStats.netSalary / globalStats.hours : 0;
         
         return {
-            year: currentYear,
+            year: targetYear,
             establishments: establishmentArray,
             totals: {
                 missions: globalStats.missions,
@@ -528,6 +532,47 @@ class SalaryManager {
                 formattedHourly: this.formatCurrency(globalAvgHourlyRate)
             }
         };
+    }
+
+    /**
+     * Navigation pour le récapitulatif annuel
+     */
+    goToPreviousYear() {
+        // Trouver la première année avec des missions
+        const missions = this.dataManager.getMissions();
+        
+        if (missions.length === 0) {
+            return this.selectedYearlyYear; // Pas de missions, pas de navigation
+        }
+        
+        let minYear = new Date().getFullYear();
+        
+        missions.forEach(mission => {
+            const missionYear = new Date(mission.date).getFullYear();
+            if (missionYear < minYear) {
+                minYear = missionYear;
+            }
+        });
+        
+        // Ne pas descendre en dessous de la première année avec des missions
+        if (this.selectedYearlyYear > minYear) {
+            this.selectedYearlyYear--;
+        }
+        return this.selectedYearlyYear;
+    }
+    
+    goToNextYear() {
+        const currentYear = new Date().getFullYear();
+        // Ne pas dépasser l'année en cours
+        if (this.selectedYearlyYear < currentYear) {
+            this.selectedYearlyYear++;
+        }
+        return this.selectedYearlyYear;
+    }
+    
+    setYearlyYear(year) {
+        this.selectedYearlyYear = year;
+        return this.selectedYearlyYear;
     }
 
     /**
