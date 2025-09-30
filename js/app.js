@@ -1133,6 +1133,8 @@ class NurseSalaryApp {
         const establishmentInput = document.getElementById('mission-establishment');
         const startTimeInput = document.getElementById('mission-start-time');
         const endTimeInput = document.getElementById('mission-end-time');
+        const hourlyRateInput = document.getElementById('mission-hourly-rate');
+        const estimatedSalaryInput = document.getElementById('mission-estimated-salary');
         
         if (!rateSelect || !establishmentInput) return;
 
@@ -1159,6 +1161,14 @@ class NurseSalaryApp {
                     }
                     if (rate.endTime && endTimeInput) {
                         endTimeInput.value = rate.endTime;
+                    }
+                    
+                    // Auto-compléter le tarif horaire et le salaire estimé
+                    if (rate.hourlyRate && hourlyRateInput) {
+                        hourlyRateInput.value = rate.hourlyRate;
+                    }
+                    if (rate.salary && estimatedSalaryInput) {
+                        estimatedSalaryInput.value = rate.salary;
                     }
                 }
             }
@@ -1205,6 +1215,20 @@ class NurseSalaryApp {
                 document.getElementById('mission-real-net').value = mission.realNetSalary || '';
                 document.getElementById('mission-start-time').value = mission.startTime || '';
                 document.getElementById('mission-end-time').value = mission.endTime || '';
+                
+                // Pré-remplir les tarifs estimés (depuis la mission ou depuis le tarif)
+                const rate = this.dataManager.getRateById(mission.rateId);
+                if (mission.hourlyRate !== undefined) {
+                    document.getElementById('mission-hourly-rate').value = mission.hourlyRate || '';
+                } else if (rate && rate.hourlyRate) {
+                    document.getElementById('mission-hourly-rate').value = rate.hourlyRate;
+                }
+                
+                if (mission.estimatedSalary !== undefined) {
+                    document.getElementById('mission-estimated-salary').value = mission.estimatedSalary || '';
+                } else if (rate && rate.salary) {
+                    document.getElementById('mission-estimated-salary').value = rate.salary;
+                }
                 
                 // Afficher le bouton supprimer
                 if (deleteBtn) {
@@ -1305,6 +1329,8 @@ class NurseSalaryApp {
             service: document.getElementById('mission-service').value,
             status: document.getElementById('mission-status').value,
             notes: document.getElementById('mission-notes').value,
+            hourlyRate: parseFloat(document.getElementById('mission-hourly-rate').value) || null,
+            estimatedSalary: parseFloat(document.getElementById('mission-estimated-salary').value) || null,
             realGrossSalary: parseFloat(document.getElementById('mission-real-gross').value) || null,
             realNetSalary: parseFloat(document.getElementById('mission-real-net').value) || null,
             startTime: document.getElementById('mission-start-time').value || null,
