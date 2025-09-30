@@ -429,6 +429,108 @@ class SalaryManager {
     }
 
     /**
+     * Calcule les statistiques annuelles par établissement
+     */
+    getYearlyStatsByEstablishment() {
+        const currentYear = new Date().getFullYear();
+        const missions = this.dataManager.getMissions();
+        const rates = this.dataManager.getRates();
+        
+        // Filtrer les missions de l'année en cours
+        const yearMissions = missions.filter(mission => {
+            const missionYear = new Date(mission.date).getFullYear();
+            return missionYear === currentYear && mission.status !== 'cancelled';
+        });
+        
+        // Grouper par établissement
+        const statsByEstablishment = {};
+        let globalStats = {
+            missions: 0,
+            hours: 0,
+            grossSalary: 0,
+            netSalary: 0
+        };
+        
+        yearMissions.forEach(mission => {
+            const rate = rates.find(r => r.id === mission.rateId);
+            if (!rate) return;
+            
+            // Déterminer l'établissement
+            const establishment = mission.establishment || rate.establishment || 'Non spécifié';
+            
+            // Initialiser l'établissement si nécessaire
+            if (!statsByEstablishment[establishment]) {
+                statsByEstablishment[establishment] = {
+                    name: establishment,
+                    missions: 0,
+                    hours: 0,
+                    grossSalary: 0,
+                    netSalary: 0
+                };
+            }
+            
+            // Incrémenter le nombre de missions
+            statsByEstablishment[establishment].missions++;
+            globalStats.missions++;
+            
+            // Ajouter les heures (seulement si pas exclu du comptage et pas une indemnité)
+            if (!rate.excludeFromCount && rate.hours > 0) {
+                statsByEstablishment[establishment].hours += rate.hours;
+                globalStats.hours += rate.hours;
+            }
+            
+            // Ajouter les salaires réels si disponibles
+            if (mission.realGrossSalary) {
+                statsByEstablishment[establishment].grossSalary += mission.realGrossSalary;
+                globalStats.grossSalary += mission.realGrossSalary;
+            }
+            
+            if (mission.realNetSalary) {
+                statsByEstablishment[establishment].netSalary += mission.realNetSalary;
+                globalStats.netSalary += mission.realNetSalary;
+            }
+        });
+        
+        // Calculer le tarif horaire moyen pour chaque établissement
+        // Tarif horaire = Net réel total / Heures totales travaillées
+        const establishmentArray = Object.values(statsByEstablishment).map(stats => {
+            // Le tarif horaire moyen est calculé sur TOUTES les heures travaillées
+            // (pas seulement celles avec un salaire réel)
+            const avgHourlyRate = stats.hours > 0 ? stats.netSalary / stats.hours : 0;
+            
+            return {
+                ...stats,
+                avgHourlyRate: Math.round(avgHourlyRate * 100) / 100,
+                formattedGross: this.formatCurrency(stats.grossSalary),
+                formattedNet: this.formatCurrency(stats.netSalary),
+                formattedHourly: this.formatCurrency(avgHourlyRate)
+            };
+        });
+        
+        // Trier par nombre de missions décroissant
+        establishmentArray.sort((a, b) => b.missions - a.missions);
+        
+        // Calculer le tarif horaire moyen global
+        // Net réel total / Toutes les heures travaillées
+        const globalAvgHourlyRate = globalStats.hours > 0 ? globalStats.netSalary / globalStats.hours : 0;
+        
+        return {
+            year: currentYear,
+            establishments: establishmentArray,
+            totals: {
+                missions: globalStats.missions,
+                hours: Math.round(globalStats.hours * 100) / 100,
+                grossSalary: Math.round(globalStats.grossSalary * 100) / 100,
+                netSalary: Math.round(globalStats.netSalary * 100) / 100,
+                avgHourlyRate: Math.round(globalAvgHourlyRate * 100) / 100,
+                formattedGross: this.formatCurrency(globalStats.grossSalary),
+                formattedNet: this.formatCurrency(globalStats.netSalary),
+                formattedHourly: this.formatCurrency(globalAvgHourlyRate)
+            }
+        };
+    }
+
+    /**
      * EXPORT ET RAPPORTS
      */
 
@@ -869,6 +971,7 @@ class SalaryManager {
         const viewInfo = this.getCurrentDashboardViewInfo();
         const monthStats = this.getDashboardMonthStats();
         const upcomingMissions = this.getUpcomingMissions();
+        const yearlyStats = this.getYearlyStatsByEstablishment();
         
         // Calculer les statistiques du mois
         const totalEstimatedSalary = monthStats.totalEstimatedSalary || 0;
@@ -876,7 +979,8 @@ class SalaryManager {
         const totalHours = monthStats.totalHours || 0;
         const missionCount = monthStats.missionCount || 0;
         
-        // Calculer le tarif moyen horaire
+        // Calculer le tarif moyen horaire estimé
+        // Pour le dashboard mensuel, on utilise l'estimé car tous les salaires réels ne sont pas forcément saisis
         const hourlyAverage = totalHours > 0 ? (totalEstimatedSalary / totalHours) : 0;
         
         return {
@@ -889,7 +993,8 @@ class SalaryManager {
                 hourlyAverage: this.formatCurrency(hourlyAverage)
             },
             upcomingMissions: upcomingMissions,
-            monthStats: monthStats
+            monthStats: monthStats,
+            yearlyStats: yearlyStats
         };
     }
 

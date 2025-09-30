@@ -103,7 +103,7 @@
                         <i class="fas fa-chart-line"></i>
                         <div>
                             <span class="stat-value" id="hourly-average">0,00 €</span>
-                            <span class="stat-label">Tarif moyen/h net</span>
+                            <span class="stat-label">Tarif moyen/h net estimé</span>
                         </div>
                     </div>
                 </div>
@@ -112,6 +112,45 @@
                     <h3>Prochaines missions</h3>
                     <div id="upcoming-missions" class="missions-list">
                         <!-- Les missions seront ajoutées dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Récapitulatif annuel par établissement -->
+                <div class="yearly-summary">
+                    <h3><i class="fas fa-chart-bar"></i> Récapitulatif annuel <span id="yearly-summary-year">2025</span></h3>
+                    <div class="establishment-summary-container">
+                        <div id="establishment-summary-cards">
+                            <!-- Les cartes par établissement seront ajoutées dynamiquement -->
+                        </div>
+                        
+                        <!-- Totaux généraux -->
+                        <div class="yearly-total-card">
+                            <div class="establishment-card-header">
+                                <h4><i class="fas fa-sigma"></i> TOTAL GÉNÉRAL</h4>
+                            </div>
+                            <div class="establishment-stats-grid">
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-missions">0</span>
+                                    <span class="establishment-stat-label">Missions</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-hours">0h</span>
+                                    <span class="establishment-stat-label">Heures</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-gross">0,00 €</span>
+                                    <span class="establishment-stat-label">Brut réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-net">0,00 €</span>
+                                    <span class="establishment-stat-label">Net réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="yearly-total-hourly">0,00 €</span>
+                                    <span class="establishment-stat-label">€/h net</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

@@ -577,6 +577,9 @@ class NurseSalaryApp {
 
         // Afficher les prochaines missions (toujours basé sur le mois actuel)
         this.displayUpcomingMissions(dashboardData.upcomingMissions);
+        
+        // Afficher le récapitulatif annuel par établissement
+        this.displayYearlyStatsByEstablishment(dashboardData.yearlyStats);
     }
 
     /**
@@ -612,6 +615,66 @@ class NurseSalaryApp {
         `).join('');
 
         container.innerHTML = missionsHtml;
+    }
+
+    /**
+     * Affiche le récapitulatif annuel par établissement
+     */
+    displayYearlyStatsByEstablishment(yearlyStats) {
+        if (!yearlyStats) return;
+        
+        // Mettre à jour l'année
+        const yearElement = document.getElementById('yearly-summary-year');
+        if (yearElement) {
+            yearElement.textContent = yearlyStats.year;
+        }
+        
+        // Afficher les cartes par établissement
+        const container = document.getElementById('establishment-summary-cards');
+        if (!container) return;
+        
+        if (yearlyStats.establishments.length === 0) {
+            container.innerHTML = '<p class="text-muted" style="text-align: center; padding: 2rem;">Aucune mission réalisée cette année</p>';
+        } else {
+            const cardsHtml = yearlyStats.establishments.map(establishment => `
+                <div class="establishment-card">
+                    <div class="establishment-card-header">
+                        <h4><i class="fas fa-hospital"></i> ${establishment.name}</h4>
+                    </div>
+                    <div class="establishment-stats-grid">
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.missions}</span>
+                            <span class="establishment-stat-label">Missions</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.hours}h</span>
+                            <span class="establishment-stat-label">Heures</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.formattedGross}</span>
+                            <span class="establishment-stat-label">Brut réel</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.formattedNet}</span>
+                            <span class="establishment-stat-label">Net réel</span>
+                        </div>
+                        <div class="establishment-stat">
+                            <span class="establishment-stat-value">${establishment.formattedHourly}</span>
+                            <span class="establishment-stat-label">€/h net</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = cardsHtml;
+        }
+        
+        // Mettre à jour les totaux généraux
+        this.updateElement('yearly-total-missions', yearlyStats.totals.missions);
+        this.updateElement('yearly-total-hours', `${yearlyStats.totals.hours}h`);
+        this.updateElement('yearly-total-gross', yearlyStats.totals.formattedGross);
+        this.updateElement('yearly-total-net', yearlyStats.totals.formattedNet);
+        this.updateElement('yearly-total-hourly', yearlyStats.totals.formattedHourly);
     }
 
     /**
