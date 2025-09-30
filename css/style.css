@@ -361,6 +361,17 @@ body {
     cursor: pointer;
     transition: background 0.3s ease;
     position: relative;
+    aspect-ratio: 1; /* Rendre les cases carrées */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Éviter le débordement du contenu */
+}
+
+@supports not (aspect-ratio: 1) {
+    /* Fallback pour les anciens navigateurs */
+    .calendar-day {
+        padding-bottom: 100%;
+    }
 }
 
 .calendar-day:hover {
@@ -390,17 +401,18 @@ body {
 .mission-item {
     background: var(--primary-color);
     color: white;
-    padding: 0.3rem 0.5rem;
+    padding: 0.2rem 0.3rem;
     border-radius: 4px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
     cursor: pointer;
     transition: opacity 0.3s ease;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .mission-item:hover {
@@ -743,10 +755,12 @@ body {
     color: #c62828;
 }
 
-/* FAB (Floating Action Button) pour mobile - Planning uniquement */
+/* FAB (Floating Action Button) pour mobile - Planning et Tarifs */
 @media (max-width: 768px) {
-    /* Transformer le bouton Ajouter mission en FAB uniquement dans Planning */
-    #planning.app-section.active #add-mission-btn {
+    /* Transformer le bouton Ajouter mission en FAB dans Planning */
+    #planning.app-section.active #add-mission-btn,
+    /* Transformer le bouton Ajouter tarif en FAB dans Tarifs */
+    #rates.app-section.active #add-rate-btn {
         position: fixed;
         bottom: 20px;
         right: 20px;
@@ -775,11 +789,30 @@ body {
         box-shadow: 0 6px 20px rgba(44, 82, 130, 0.35), 0 2px 4px rgba(0, 0, 0, 0.12);
     }
     
+    /* Transformer le bouton Ajouter tarif en FAB dans Tarifs */
+    #rates.app-section.active #add-rate-btn:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 6px 20px rgba(44, 82, 130, 0.35), 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+    
     /* Sur les écrans tactiles, pas d'effet hover */
     @media (hover: none) {
-        #planning.app-section.active #add-mission-btn:hover {
+        #planning.app-section.active #add-mission-btn:hover,
+        #rates.app-section.active #add-rate-btn:hover {
             transform: none;
         }
+    }
+    
+    #rates.app-section.active #add-rate-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* Style de l'icône + pour les tarifs */
+    #rates.app-section.active #add-rate-btn i {
+        font-size: 1.5rem;
+        margin: 0;
+        margin-left: 7px;
+        color: white;
     }
     
     #planning.app-section.active #add-mission-btn:active {
@@ -825,16 +858,29 @@ body {
     
     /* Ajuster la position du FAB sur les petits écrans */
     @media (max-width: 380px) {
-        #planning.app-section.active #add-mission-btn {
+        #planning.app-section.active #add-mission-btn,
+        #rates.app-section.active #add-rate-btn {
             bottom: 15px;
             right: 15px;
             width: 50px;
             height: 50px;
         }
         
-        #planning.app-section.active #add-mission-btn i {
+        #planning.app-section.active #add-mission-btn i,
+        #rates.app-section.active #add-rate-btn i {
             font-size: 1.3rem;
         }
+    }
+    
+    /* Ajuster les headers pour les sections avec FAB */
+    #rates .section-header {
+        margin-bottom: 1rem;
+        justify-content: center;
+    }
+    
+    /* Ajouter du padding en bas pour que le FAB ne cache pas le contenu */
+    #rates.app-section.active {
+        padding-bottom: 80px;
     }
 }
 
@@ -908,8 +954,21 @@ body {
     }
     
     .calendar-day {
-        min-height: 80px;
+        min-height: 60px;
         font-size: 0.9rem;
+        aspect-ratio: 1; /* Maintenir les cases carrées sur mobile */
+        padding: 0.25rem;
+    }
+    
+    .day-number {
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .mission-item {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.2rem;
+        margin-bottom: 0.1rem;
     }
     
     .rates-table-container {
