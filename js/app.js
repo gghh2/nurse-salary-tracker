@@ -173,6 +173,43 @@ class NurseSalaryApp {
     }
 
     /**
+     * Configuration des événements de sauvegarde
+     */
+    setupBackupEvents() {
+        // Export ICS (Calendar)
+        const exportIcsBtn = document.getElementById('export-ics-btn');
+        if (exportIcsBtn) {
+            exportIcsBtn.addEventListener('click', () => this.exportToCalendar());
+        }
+
+        // Export données JSON
+        const exportDataBtn = document.getElementById('export-data-btn');
+        if (exportDataBtn) {
+            exportDataBtn.addEventListener('click', () => this.exportData());
+        }
+
+        // Import données JSON
+        const importFileInput = document.getElementById('import-file');
+        const importDataBtn = document.getElementById('import-data-btn');
+        
+        if (importFileInput) {
+            importFileInput.addEventListener('change', (e) => this.importData(e));
+        }
+        
+        if (importDataBtn) {
+            importDataBtn.addEventListener('click', () => {
+                document.getElementById('import-file').click();
+            });
+        }
+
+        // Reset données
+        const resetDataBtn = document.getElementById('reset-data-btn');
+        if (resetDataBtn) {
+            resetDataBtn.addEventListener('click', () => this.resetData());
+        }
+    }
+
+    /**
      * Configuration de la navigation du calendrier
      */
     setupCalendarNavigation() {
@@ -1239,8 +1276,17 @@ class NurseSalaryApp {
                 return;
             }
             
-            // Générer le fichier ICS
-            const icsContent = this.salaryManager.generateICSFile();
+            // Générer le fichier ICS (uniquement missions futures par défaut)
+            const icsResult = this.salaryManager.generateICSFile(true);
+            
+            if (icsResult.exportedCount === 0) {
+                this.showNotification(
+                    '⚠️ Aucune mission future à exporter.<br>' +
+                    'Toutes vos missions sont dans le passé.',
+                    'warning'
+                );
+                return;
+            }
             
             // Nom du fichier avec timestamp
             const now = new Date();
@@ -1248,15 +1294,19 @@ class NurseSalaryApp {
             const filename = `missions-infirmier-${dateStr}.ics`;
             
             // Télécharger le fichier
-            this.downloadFile(icsContent, filename, 'text/calendar');
+            this.downloadFile(icsResult.content, filename, 'text/calendar');
             
-            this.showNotification(
-                `✅ Fichier ICS téléchargé !<br><br>` +
-                `📱 <strong>Sur mobile :</strong> Ouvrir le fichier pour l'ajouter à Google Calendar<br>` +
-                `💻 <strong>Sur PC :</strong> Google Calendar → ⚙️ Paramètres → Importer et exporter → Importer`,
-                'success',
-                8000
-            );
+            // Message de confirmation avec statistiques
+            let message = `✅ <strong>${icsResult.exportedCount} mission(s) exportée(s) !</strong><br><br>`;
+            
+            if (icsResult.skippedPastCount > 0) {
+                message += `ℹ️ ${icsResult.skippedPastCount} mission(s) passée(s) ignorée(s)<br><br>`;
+            }
+            
+            message += `📱 <strong>Sur mobile :</strong> Ouvrir le fichier pour l'ajouter à votre calendrier<br>` +
+                      `💻 <strong>Sur PC :</strong> Google Calendar → ⚙️ Paramètres → Importer et exporter → Importer`;
+            
+            this.showNotification(message, 'success', 8000);
             
         } catch (error) {
             console.error('Erreur lors de l\'export ICS:', error);

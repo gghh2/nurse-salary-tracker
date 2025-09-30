@@ -419,8 +419,9 @@ class SalaryManager {
 
     /**
      * Génère un fichier ICS (iCalendar) pour export vers Google Calendar
+     * Par défaut, n'exporte que les missions futures (à partir d'aujourd'hui)
      */
-    generateICSFile(year = null, month = null) {
+    generateICSFile(year = null, month = null, includeAllMissions = false) {
         let missions;
         
         // Si année et mois spécifiés, filtrer
@@ -429,6 +430,24 @@ class SalaryManager {
         } else {
             // Sinon, toutes les missions
             missions = this.dataManager.getMissions();
+        }
+        
+        // NOUVEAU : Filtrer pour ne garder que les missions futures (sauf si includeAllMissions est true)
+        if (!includeAllMissions) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Minuit aujourd'hui pour inclure les missions d'aujourd'hui
+            const todayStr = today.getFullYear() + '-' + 
+                           String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(today.getDate()).padStart(2, '0');
+            
+            // Filtrer pour ne garder que les missions à partir d'aujourd'hui
+            const totalMissions = missions.length;
+            missions = missions.filter(mission => {
+                const missionDateStr = mission.date.split('T')[0]; // YYYY-MM-DD
+                return missionDateStr >= todayStr;
+            });
+            
+            console.log(`Export ICS: ${missions.length} missions futures sur ${totalMissions} missions totales`);
         }
         
         const rates = this.dataManager.getRates();
@@ -445,6 +464,9 @@ class SalaryManager {
             'X-WR-CALDESC:Planning des missions infirmières',
             ''  // Ligne vide après l'en-tête
         ].join('\r\n');
+        
+        // Compteur de missions exportées
+        let exportedCount = 0;
         
         // Ajouter chaque mission comme événement
         const events = [];
@@ -555,6 +577,7 @@ class SalaryManager {
             ].filter(line => line !== '').join('\r\n');
             
             events.push(eventLines);
+            exportedCount++;
         });
         
         // Joindre tous les événements avec une ligne vide entre chacun
@@ -565,7 +588,12 @@ class SalaryManager {
         // Fermer le calendrier avec une ligne vide avant
         icsContent += '\r\n\r\nEND:VCALENDAR';
         
-        return icsContent;
+        // Retourner le contenu ICS et le nombre de missions exportées
+        return {
+            content: icsContent,
+            exportedCount: exportedCount,
+            totalCount: missions.length
+        };
     }
     
     /**
@@ -810,6 +838,180 @@ class SalaryManager {
             const rate = rates.find(r => r.id === mission.rateId);
             return { ...mission, rate };
         });
+    }
+
+    /**
+     * EXPORT ICS
+     */
+
+    /**
+     * Generate ICS file content for calendar export
+     * @param {boolean} onlyFuture - If true, only export future missions (default: true)
+     * @returns {Object} Object containing ICS content and stats
+     */
+    generateICSFile(onlyFuture = true) {
+        const missions = this.dataManager.getMissions();
+        const rates = this.dataManager.getRates();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        
+        // Filter missions based on date
+        const filteredMissions = missions.filter(mission => {
+            if (mission.status === 'cancelled') return false;
+            
+            const missionDate = new Date(mission.date + 'T00:00:00');
+            return onlyFuture ? missionDate >= today : true;
+        });
+
+        // Sort missions by date
+        filteredMissions.sort((a, b) => a.date.localeCompare(b.date));
+
+        // ICS header
+        let icsContent = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Nurse Salary Tracker//Missions Infirmier//FR',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:Missions Infirmier',
+            'X-WR-TIMEZONE:Europe/Paris',
+            'X-WR-CALDESC:Planning des missions infirmières',
+            ''  // Empty line after header
+        ].join('\r\n');
+
+        // Add timezone definition
+        icsContent += [
+            'BEGIN:VTIMEZONE',
+            'TZID:Europe/Paris',
+            'X-LIC-LOCATION:Europe/Paris',
+            'BEGIN:DAYLIGHT',
+            'TZOFFSETFROM:+0100',
+            'TZOFFSETTO:+0200',
+            'TZNAME:CEST',
+            'DTSTART:19700329T020000',
+            'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU',
+            'END:DAYLIGHT',
+            'BEGIN:STANDARD',
+            'TZOFFSETFROM:+0200',
+            'TZOFFSETTO:+0100',
+            'TZNAME:CET',
+            'DTSTART:19701025T030000',
+            'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
+            'END:STANDARD',
+            'END:VTIMEZONE',
+            ''
+        ].join('\r\n');
+
+        // Generate unique ID for each event
+        const generateUID = (mission) => {
+            const timestamp = new Date(mission.date).getTime();
+            return `${mission.id}-${timestamp}@nurse-salary-tracker`;
+        };
+
+        // Add events
+        let exportedCount = 0;
+        const events = [];
+        
+        filteredMissions.forEach(mission => {
+            const rate = rates.find(r => r.id === mission.rateId);
+            if (!rate) return;
+
+            exportedCount++;
+
+            // Determine status emoji
+            let statusEmoji = '';
+            switch (mission.status) {
+                case 'confirmed':
+                    statusEmoji = '✅ ';
+                    break;
+                case 'planned':
+                    statusEmoji = '❓ ';
+                    break;
+                case 'completed':
+                    statusEmoji = '✔️ ';
+                    break;
+            }
+
+            // Format date for ICS (YYYYMMDD)
+            const missionDate = new Date(mission.date + 'T00:00:00');
+            const dateStr = missionDate.getFullYear() +
+                           String(missionDate.getMonth() + 1).padStart(2, '0') +
+                           String(missionDate.getDate()).padStart(2, '0');
+
+            // Calculate start and end times
+            const startHour = mission.startHour || '08:00';
+            const [startH, startM] = startHour.split(':');
+            const startTime = `${startH.padStart(2, '0')}${startM.padStart(2, '0')}00`;
+            
+            // Calculate end time based on rate hours
+            const endDate = new Date(missionDate);
+            endDate.setHours(parseInt(startH), parseInt(startM));
+            endDate.setHours(endDate.getHours() + (rate.hours || 8));
+            const endTime = String(endDate.getHours()).padStart(2, '0') +
+                          String(endDate.getMinutes()).padStart(2, '0') + '00';
+
+            // Build event summary
+            const summary = `${statusEmoji}${rate.acronym} - ${mission.establishment || 'Non spécifié'}`;
+
+            // Build event description
+            let description = [];
+            description.push(`Type: ${rate.acronym}`);
+            if (rate.description) description.push(`Description: ${rate.description}`);
+            if (mission.establishment) description.push(`Établissement: ${mission.establishment}`);
+            if (mission.service) description.push(`Service: ${mission.service}`);
+            description.push(`Durée: ${rate.hours || 0}h`);
+            
+            // Add salary info if not excluded from count
+            if (!rate.excludeFromCount) {
+                if (rate.salary) {
+                    description.push(`Salaire: ${rate.salary}€`);
+                } else if (rate.hourlyRate) {
+                    description.push(`Tarif horaire: ${rate.hourlyRate}€/h`);
+                    description.push(`Salaire estimé: ${(rate.hourlyRate * (rate.hours || 0))}€`);
+                }
+            }
+            
+            if (mission.notes) description.push(`Notes: ${mission.notes}`);
+            description.push(`Statut: ${mission.status === 'confirmed' ? 'Confirmée' : 
+                                      mission.status === 'planned' ? 'Planifiée' : 
+                                      mission.status === 'completed' ? 'Réalisée' : mission.status}`);
+
+            // Create event
+            const eventLines = [
+                'BEGIN:VEVENT',
+                `UID:${generateUID(mission)}`,
+                `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
+                `DTSTART;TZID=Europe/Paris:${dateStr}T${startTime}`,
+                `DTEND;TZID=Europe/Paris:${dateStr}T${endTime}`,
+                `SUMMARY:${summary}`,
+                `DESCRIPTION:${description.join('\\n')}`,
+                mission.establishment ? `LOCATION:${mission.establishment}` : '',
+                `STATUS:${mission.status === 'confirmed' ? 'CONFIRMED' : 'TENTATIVE'}`,
+                'TRANSP:OPAQUE',
+                'END:VEVENT'
+            ].filter(line => line).join('\r\n');
+
+            events.push(eventLines);
+        });
+        
+        // Join all events with empty line between each
+        if (events.length > 0) {
+            icsContent += '\r\n' + events.join('\r\n\r\n');
+        }
+        
+        // Close calendar with empty line before
+        icsContent += '\r\n\r\nEND:VCALENDAR';
+        
+        // Return ICS content and stats
+        return {
+            content: icsContent,
+            exportedCount: exportedCount,
+            totalCount: missions.length,
+            skippedPastCount: onlyFuture ? missions.filter(m => {
+                const missionDate = new Date(m.date + 'T00:00:00');
+                return missionDate < today && m.status !== 'cancelled';
+            }).length : 0
+        };
     }
 }
 
