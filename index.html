@@ -210,28 +210,49 @@
                     <!-- Le calendrier sera généré dynamiquement -->
                 </div>
 
-                <div class="month-summary">
-                    <h3>Résumé du mois de <span id="planning-summary-month">septembre</span></h3>
-                    <div class="summary-stats">
-                        <div class="summary-item">
-                            <span>Total missions:</span>
-                            <span id="month-missions-total">0</span>
+                <!-- Récapitulatif mensuel par établissement -->
+                <div class="monthly-establishment-summary">
+                    <h3><i class="fas fa-building"></i> Détail par établissement</h3>
+                    <div class="establishment-summary-container">
+                        <div id="monthly-establishment-cards">
+                            <!-- Les cartes par établissement seront ajoutées dynamiquement -->
                         </div>
-                        <div class="summary-item">
-                            <span>Total heures:</span>
-                            <span id="month-hours-total">0h</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Salaire estimé net:</span>
-                            <span id="month-salary-total">0,00 €</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Salaire réel net:</span>
-                            <span id="month-real-salary-total">0,00 €</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Écart (réel - estimé):</span>
-                            <span id="month-salary-difference">0,00 €</span>
+                        
+                        <!-- Totaux généraux du mois -->
+                        <div class="monthly-total-card">
+                            <div class="establishment-card-header">
+                                <h4><i class="fas fa-sigma"></i> TOTAL DU MOIS</h4>
+                            </div>
+                            <div class="establishment-stats-grid-extended">
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-missions">0</span>
+                                    <span class="establishment-stat-label">Missions</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-hours">0h</span>
+                                    <span class="establishment-stat-label">Heures</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-estimated">0,00 €</span>
+                                    <span class="establishment-stat-label">Net estimé</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-gross">0,00 €</span>
+                                    <span class="establishment-stat-label">Brut réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-net">0,00 €</span>
+                                    <span class="establishment-stat-label">Net réel</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-hourly">0,00 €</span>
+                                    <span class="establishment-stat-label">€/h net</span>
+                                </div>
+                                <div class="establishment-stat">
+                                    <span class="establishment-stat-value" id="monthly-total-difference">0,00 €</span>
+                                    <span class="establishment-stat-label">Écart</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

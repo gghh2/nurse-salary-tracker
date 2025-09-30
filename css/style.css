@@ -412,7 +412,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    max-width: 80%;
 }
 
 .mission-item:hover {
@@ -1383,6 +1383,109 @@ body {
     
     @media (max-width: 480px) {
         .establishment-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    /* ==================================== */
+    /* 6. RÉCAPITULATIF MENSUEL PAR ÉTABLISSEMENT */
+    /* ==================================== */
+    
+    .monthly-establishment-summary {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .monthly-establishment-summary h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .monthly-establishment-summary h3 span {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    #monthly-establishment-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .monthly-establishment-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .monthly-establishment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .establishment-stats-grid-extended {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    /* Total mensuel avec style distinct */
+    .monthly-total-card {
+        background: linear-gradient(135deg, #f7fafc, #e2e8f0);
+        border: 2px solid var(--primary-color);
+        margin-top: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .monthly-total-card .establishment-card-header {
+        background: linear-gradient(135deg, #764ba2, #667eea);
+    }
+    
+    .monthly-total-card .establishment-stat-value {
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Coloration spéciale pour l'écart */
+    .establishment-stat.difference-negative .establishment-stat-value {
+        color: #e53e3e !important;
+        font-weight: 700;
+    }
+    
+    .establishment-stat.difference-positive .establishment-stat-value {
+        color: #38a169 !important;
+        font-weight: 700;
+    }
+    
+    /* Responsive pour le récapitulatif mensuel */
+    @media (max-width: 768px) {
+        #monthly-establishment-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .establishment-stats-grid-extended {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .monthly-total-card .establishment-stat-value {
+            font-size: 1.1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .establishment-stats-grid-extended {
             grid-template-columns: repeat(2, 1fr);
         }
     }

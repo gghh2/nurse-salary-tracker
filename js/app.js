@@ -999,7 +999,9 @@ class NurseSalaryApp {
         const planningData = this.salaryManager.getPlanningData();
         this.displayCalendar(planningData.calendarData);
         this.updateMonthDisplay(planningData.viewInfo);
-        this.updateMonthSummary(planningData.monthStats);
+        
+        // Afficher le récapitulatif mensuel par établissement
+        this.displayMonthlyStatsByEstablishment(planningData.monthlyEstablishmentStats);
     }
 
     /**
@@ -1061,7 +1063,6 @@ class NurseSalaryApp {
     updateMonthDisplay(viewInfo) {
         const display = document.getElementById('current-month-display');
         const planningTitle = document.getElementById('planning-month-title');
-        const planningSummaryTitle = document.getElementById('planning-summary-month');
         
         if (display) {
             display.textContent = viewInfo.monthName;
@@ -1070,33 +1071,80 @@ class NurseSalaryApp {
         if (planningTitle) {
             planningTitle.textContent = viewInfo.monthName;
         }
-        
-        if (planningSummaryTitle) {
-            planningSummaryTitle.textContent = viewInfo.monthName;
-        }
     }
-
+    
     /**
-     * Met à jour le résumé mensuel
+     * Affiche le récapitulatif mensuel par établissement
      */
-    updateMonthSummary(monthStats) {
-        this.updateElement('month-missions-total', monthStats.totalMissions);
-        this.updateElement('month-hours-total', monthStats.totalHours);
-        this.updateElement('month-salary-total', monthStats.totalEstimatedSalary);
-        this.updateElement('month-real-salary-total', monthStats.totalRealSalary);
+    displayMonthlyStatsByEstablishment(monthlyStats) {
+        if (!monthlyStats) return;
         
-        // Gérer l'affichage de l'écart avec couleur
-        const differenceElement = document.getElementById('month-salary-difference');
+        // Afficher les cartes par établissement
+        const container = document.getElementById('monthly-establishment-cards');
+        if (!container) return;
+        
+        if (monthlyStats.establishments.length === 0) {
+            container.innerHTML = '<p class="text-muted" style="text-align: center; padding: 2rem;">Aucune mission ce mois-ci</p>';
+        } else {
+            const cardsHtml = monthlyStats.establishments.map(establishment => {
+                const differenceClass = establishment.difference >= 0 ? 'difference-positive' : 'difference-negative';
+                
+                return `
+                    <div class="monthly-establishment-card">
+                        <div class="establishment-card-header">
+                            <h4><i class="fas fa-hospital"></i> ${establishment.name}</h4>
+                        </div>
+                        <div class="establishment-stats-grid-extended">
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.missions}</span>
+                                <span class="establishment-stat-label">Missions</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.hours}h</span>
+                                <span class="establishment-stat-label">Heures</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedEstimated}</span>
+                                <span class="establishment-stat-label">Net estimé</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedGross}</span>
+                                <span class="establishment-stat-label">Brut réel</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedNet}</span>
+                                <span class="establishment-stat-label">Net réel</span>
+                            </div>
+                            <div class="establishment-stat">
+                                <span class="establishment-stat-value">${establishment.formattedHourly}</span>
+                                <span class="establishment-stat-label">€/h net</span>
+                            </div>
+                            <div class="establishment-stat ${differenceClass}">
+                                <span class="establishment-stat-value">${establishment.formattedDifference}</span>
+                                <span class="establishment-stat-label">Écart</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = cardsHtml;
+        }
+        
+        // Mettre à jour les totaux généraux
+        this.updateElement('monthly-total-missions', monthlyStats.totals.missions);
+        this.updateElement('monthly-total-hours', `${monthlyStats.totals.hours}h`);
+        this.updateElement('monthly-total-estimated', monthlyStats.totals.formattedEstimated);
+        this.updateElement('monthly-total-gross', monthlyStats.totals.formattedGross);
+        this.updateElement('monthly-total-net', monthlyStats.totals.formattedNet);
+        this.updateElement('monthly-total-hourly', monthlyStats.totals.formattedHourly);
+        
+        // Gérer l'affichage de l'écart avec la classe appropriée
+        const differenceElement = document.getElementById('monthly-total-difference');
         if (differenceElement) {
-            differenceElement.textContent = monthStats.salaryDifference;
-            
-            // Retirer les anciennes classes
-            differenceElement.classList.remove('positive', 'negative');
-            
-            // Ajouter la classe appropriée
-            if (monthStats.salaryDifferenceClass) {
-                differenceElement.classList.add(monthStats.salaryDifferenceClass);
-            }
+            differenceElement.textContent = monthlyStats.totals.formattedDifference;
+            differenceElement.parentElement.classList.remove('difference-positive', 'difference-negative');
+            differenceElement.parentElement.classList.add(monthlyStats.totals.differenceClass === 'positive' ? 'difference-positive' : 'difference-negative');
         }
     }
 
