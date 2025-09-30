@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Full Page Swipe Planning</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .test-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #2c5282;
+            font-size: 1.8rem;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .feature-content h3 {
+            margin: 0 0 4px 0;
+            color: #1a365d;
+            font-size: 1rem;
+        }
+        
+        .feature-content p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .test-zone {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 2px dashed #3182ce;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .test-zone::before,
+        .test-zone::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            opacity: 0.2;
+        }
+        
+        .test-zone::before {
+            content: '👈';
+            left: 10px;
+            animation: slideLeft 2s ease-in-out infinite;
+        }
+        
+        .test-zone::after {
+            content: '👉';
+            right: 10px;
+            animation: slideRight 2s ease-in-out infinite;
+        }
+        
+        @keyframes slideLeft {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(-10px); }
+        }
+        
+        @keyframes slideRight {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(10px); }
+        }
+        
+        .test-zone h3 {
+            margin: 0 0 10px 0;
+            color: #1e40af;
+        }
+        
+        .test-zone p {
+            margin: 0;
+            color: #3730a3;
+            font-weight: 500;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .comparison-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #334155;
+        }
+        
+        .comparison-table td:first-child {
+            font-weight: 600;
+            color: #475569;
+        }
+        
+        .check {
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .cross {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .warning-box h4 {
+            margin: 0 0 8px 0;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-box p {
+            margin: 0;
+            color: #78350f;
+            font-size: 0.9rem;
+        }
+        
+        .mobile-only {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .mobile-only {
+                display: block;
+                background: #dcfce7;
+                padding: 12px;
+                border-radius: 8px;
+                text-align: center;
+                color: #14532d;
+                font-weight: 600;
+                margin-bottom: 20px;
+            }
+            
+            .desktop-only {
+                display: none;
+            }
+        }
+        
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .code-comment {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="mobile-only">
+            ✅ Mode Mobile - Swipe activé sur toute la page !
+        </div>
+        
+        <div class="desktop-only test-card">
+            <p style="text-align: center; color: #ef4444;">
+                ⚠️ Passez en mode mobile (F12 → 📱) pour tester
+            </p>
+        </div>
+        
+        <div class="test-card">
+            <h1>
+                📱 Full Page Swipe
+                <span class="badge">NEW</span>
+            </h1>
+            
+            <p style="color: #64748b; margin: 15px 0;">
+                Le swipe gauche/droite fonctionne maintenant sur <strong>toute la page Planning</strong>, 
+                pas seulement sur le calendrier !
+            </p>
+        </div>
+        
+        <div class="test-card">
+            <h2 style="color: #1e40af; font-size: 1.3rem; margin-top: 0;">
+                ✨ Nouveautés
+            </h2>
+            
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">📐</div>
+                    <div class="feature-content">
+                        <h3>Zone étendue</h3>
+                        <p>Swipez n'importe où sur la page Planning pour changer de mois</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-content">
+                        <h3>Détection intelligente</h3>
+                        <p>Ignore les swipes sur les boutons et éléments interactifs</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">📳</div>
+                    <div class="feature-content">
+                        <h3>Feedback haptique</h3>
+                        <p>Vibration légère lors du swipe (si supporté)</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">💡</div>
+                    <div class="feature-content">
+                        <h3>Indicateur visuel</h3>
+                        <p>Message "Swipe pour naviguer" au premier usage</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-zone">
+            <h3>Zone de Test</h3>
+            <p>Swipez ici pour tester !</p>
+        </div>
+        
+        <div class="test-card">
+            <h2 style="color: #1e40af; font-size: 1.3rem;">
+                📊 Comparaison
+            </h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Zone</th>
+                        <th>Avant</th>
+                        <th>Maintenant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Header</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Calendrier</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Résumé mensuel</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Espaces vides</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="test-card">
+            <h2 style="color: #1e40af; font-size: 1.3rem;">
+                🔧 Détails Techniques
+            </h2>
+            
+            <div class="code-block">
+                <span class="code-comment">// Avant - Zone limitée</span><br>
+                swipeZone = element.querySelector('.planning-grid');<br><br>
+                
+                <span class="code-comment">// Maintenant - Toute la section</span><br>
+                swipeZone = element; <span class="code-comment">// #planning</span>
+            </div>
+            
+            <p style="color: #64748b; font-size: 0.9rem; margin-top: 15px;">
+                <strong>Éléments exclus du swipe :</strong><br>
+                • Boutons et liens<br>
+                • Inputs et formulaires<br>
+                • Sélecteur de mois<br>
+                • Items de mission cliquables
+            </p>
+        </div>
+        
+        <div class="warning-box">
+            <h4>
+                ⚠️ Points d'attention
+            </h4>
+            <p>
+                • Le swipe vertical (scroll) reste prioritaire<br>
+                • Ratio horizontal/vertical de 1.5:1 minimum<br>
+                • Distance minimale de 50px pour déclencher
+            </p>
+        </div>
+        
+        <div class="test-card">
+            <h2 style="color: #1e40af; font-size: 1.3rem;">
+                ✅ Tests à effectuer
+            </h2>
+            
+            <ol style="color: #475569; line-height: 1.8;">
+                <li>Ouvrir l'app sur mobile</li>
+                <li>Aller dans "Planning"</li>
+                <li>Swiper n'importe où sur la page</li>
+                <li>Vérifier que le mois change</li>
+                <li>Tester près des boutons (doit être ignoré)</li>
+                <li>Vérifier l'indicateur "Swipe pour naviguer"</li>
+                <li>Confirmer qu'il disparaît après usage</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // Simulation de swipe pour démonstration
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        const testZone = document.querySelector('.test-zone');
+        
+        if (testZone) {
+            testZone.addEventListener('touchstart', e => {
+                touchStartX = e.touches[0].clientX;
+            });
+            
+            testZone.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].clientX;
+                handleSwipe();
+            });
+            
+            // Pour les tests sur desktop
+            testZone.addEventListener('mousedown', e => {
+                touchStartX = e.clientX;
+            });
+            
+            testZone.addEventListener('mouseup', e => {
+                touchEndX = e.clientX;
+                handleSwipe();
+            });
+        }
+        
+        function handleSwipe() {
+            const diff = touchEndX - touchStartX;
+            if (Math.abs(diff) > 50) {
+                const direction = diff > 0 ? 'Droite (Mois précédent)' : 'Gauche (Mois suivant)';
+                
+                // Feedback visuel
+                testZone.style.background = 'linear-gradient(135deg, #dcfce7, #bbf7d0)';
+                testZone.innerHTML = `
+                    <h3 style="color: #14532d;">Swipe détecté !</h3>
+                    <p style="color: #166534;">Direction : ${direction}</p>
+                `;
+                
+                setTimeout(() => {
+                    testZone.style.background = 'linear-gradient(135deg, #f0f9ff, #e0f2fe)';
+                    testZone.innerHTML = `
+                        <h3>Zone de Test</h3>
+                        <p>Swipez ici pour tester !</p>
+                    `;
+                }, 1500);
+                
+                // Vibration si supportée
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }
+        }
+        
+        console.log('🎯 Full Page Swipe Test');
+        console.log('📱 Mobile:', window.innerWidth <= 768);
+        console.log('🔄 Swipe zones extended to full Planning section');
+    </script>
+</body>
+</html>

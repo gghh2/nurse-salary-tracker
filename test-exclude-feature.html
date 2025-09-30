@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test - Exclude From Count Feature</title>
+</head>
+<body>
+    <h1>Test de la fonctionnalité "Ne pas compter en tant que mission"</h1>
+    
+    <h2>Tests à effectuer:</h2>
+    <ol>
+        <li>
+            <h3>Test du formulaire de tarif</h3>
+            <ul>
+                <li>✅ Ouvrir le formulaire d'ajout de tarif</li>
+                <li>✅ Vérifier la présence de la case à cocher "Ne pas compter en tant que mission"</li>
+                <li>✅ Créer un tarif avec la case cochée (ex: "Formation" - 7h - 100€)</li>
+                <li>✅ Vérifier que le tarif est créé avec [NC] dans le tableau</li>
+            </ul>
+        </li>
+        
+        <li>
+            <h3>Test de modification</h3>
+            <ul>
+                <li>✅ Modifier un tarif existant</li>
+                <li>✅ Cocher la case "Ne pas compter en tant que mission"</li>
+                <li>✅ Vérifier que la modification est sauvegardée</li>
+            </ul>
+        </li>
+        
+        <li>
+            <h3>Test des calculs</h3>
+            <ul>
+                <li>✅ Ajouter une mission avec un tarif normal</li>
+                <li>✅ Ajouter une mission avec un tarif marqué "Ne pas compter"</li>
+                <li>✅ Vérifier dans le tableau de bord que:
+                    <ul>
+                        <li>Le salaire total inclut TOUS les tarifs</li>
+                        <li>Le nombre d'heures n'inclut PAS les tarifs exclus</li>
+                        <li>Le nombre de missions n'inclut PAS les tarifs exclus</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        
+        <li>
+            <h3>Test d'export/import</h3>
+            <ul>
+                <li>✅ Exporter les données</li>
+                <li>✅ Vérifier que la propriété excludeFromCount est présente dans le JSON</li>
+                <li>✅ Réimporter les données</li>
+                <li>✅ Vérifier que les tarifs gardent leur statut</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h2>Résultat attendu:</h2>
+    <p>Les missions avec des tarifs marqués "Ne pas compter en tant que mission" doivent:</p>
+    <ul>
+        <li>✅ Apparaître dans le planning</li>
+        <li>✅ Être comptées dans le salaire total</li>
+        <li>❌ NE PAS être comptées dans le nombre d'heures travaillées</li>
+        <li>❌ NE PAS être comptées dans le nombre de missions</li>
+        <li>❌ NE PAS influencer le tarif horaire moyen</li>
+    </ul>
+    
+    <script>
+        console.log('Test file loaded. Please open the main application to test the feature.');
+    </script>
+</body>
+</html>
