@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Planning Sticky Mobile</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        
+        .test-header {
+            background: linear-gradient(135deg, #2c5282, #3182ce);
+            color: white;
+            padding: 20px;
+            margin: -20px -20px 20px -20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f7fafc;
+            border-left: 4px solid #38a169;
+            border-radius: 4px;
+        }
+        
+        .test-item.warning {
+            border-left-color: #d69e2e;
+            background: #fffaf0;
+        }
+        
+        .test-item.info {
+            border-left-color: #3182ce;
+            background: #ebf8ff;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status.new {
+            background: #f0fff4;
+            color: #22543d;
+        }
+        
+        .status.updated {
+            background: #ebf8ff;
+            color: #2c5282;
+        }
+        
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background: #f7fafc;
+            font-weight: 600;
+        }
+        
+        .mobile-only {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-only {
+                display: block;
+                padding: 15px;
+                background: #e8f5e8;
+                border-radius: 8px;
+                margin: 20px 0;
+                text-align: center;
+            }
+            
+            .desktop-only {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>📅 Test Planning Sticky</h1>
+        <p style="margin-top: 10px; opacity: 0.9;">Vérification du sélecteur de mois sticky dans la section Planning</p>
+    </div>
+    
+    <div class="mobile-only">
+        <strong>✅ Mode Mobile Actif!</strong><br>
+        Le sticky est fonctionnel
+    </div>
+    
+    <div class="desktop-only test-section">
+        <strong>⚠️ Mode Desktop Détecté</strong><br>
+        Activez le mode responsive (F12) pour tester sur mobile (&lt; 768px)
+    </div>
+    
+    <div class="test-section">
+        <h2 style="color: #2c5282;">🆕 Nouvelle Fonctionnalité</h2>
+        <span class="status new">NOUVEAU</span>
+        
+        <div class="test-item info">
+            <strong>Changement:</strong> Le sélecteur de mois dans la section Planning reste maintenant fixé en haut lors du scroll, exactement comme dans le Tableau de bord.
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 style="color: #2c5282;">✨ Comportement Attendu</h2>
+        
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Comportement</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Tableau de bord</strong></td>
+                    <td>Sélecteur de mois sticky</td>
+                    <td>✅ Déjà implémenté</td>
+                </tr>
+                <tr>
+                    <td><strong>Planning</strong></td>
+                    <td>Sélecteur de mois sticky</td>
+                    <td><span class="status new">✅ Nouveau</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Tarifs</strong></td>
+                    <td>Première colonne sticky</td>
+                    <td>✅ Déjà implémenté</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="test-section">
+        <h2 style="color: #2c5282;">🧪 Tests à Effectuer</h2>
+        
+        <div class="test-item">
+            <strong>Test 1: Navigation et Sticky</strong>
+            <ol>
+                <li>Ouvrir l'application sur mobile</li>
+                <li>Naviguer vers "Planning"</li>
+                <li>Scroller vers le bas pour voir le calendrier</li>
+                <li>✓ Le sélecteur de mois doit rester visible en haut</li>
+                <li>✓ Les boutons &lt; et &gt; doivent rester fonctionnels</li>
+            </ol>
+        </div>
+        
+        <div class="test-item">
+            <strong>Test 2: Interaction avec le FAB</strong>
+            <ol>
+                <li>Dans Planning, scroller jusqu'en bas</li>
+                <li>✓ Le bouton flottant "+" doit rester en bas à droite</li>
+                <li>✓ Le sélecteur sticky ne doit pas masquer le contenu</li>
+                <li>✓ Pas de conflit de z-index</li>
+            </ol>
+        </div>
+        
+        <div class="test-item">
+            <strong>Test 3: Changement de Mois</strong>
+            <ol>
+                <li>Scroller au milieu du calendrier</li>
+                <li>Utiliser les boutons &lt; et &gt; pour changer de mois</li>
+                <li>✓ La navigation doit fonctionner normalement</li>
+                <li>✓ Le scroll doit se réinitialiser en haut</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 style="color: #2c5282;">🎨 Détails Visuels</h2>
+        
+        <div class="test-item">
+            <strong>Styles appliqués:</strong>
+            <ul>
+                <li><code>position: sticky</code> avec <code>top: -1px</code></li>
+                <li>Background dégradé bleu cohérent</li>
+                <li>Ombre portée qui s'intensifie quand "collé"</li>
+                <li>Transitions fluides de 0.3s</li>
+                <li>Z-index: 40 (sous les modales)</li>
+            </ul>
+        </div>
+        
+        <div class="test-item info">
+            <strong>Classes dynamiques:</strong>
+            <ul>
+                <li><code>.is-stuck</code> - Appliquée quand l'élément est collé</li>
+                <li>Gérée par IntersectionObserver en JavaScript</li>
+                <li>Ajoute une ombre plus prononcée</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 style="color: #2c5282;">⚙️ Implémentation Technique</h2>
+        
+        <div class="test-item">
+            <strong>Fichiers modifiés:</strong>
+            <ul>
+                <li><strong>css/style.css</strong>
+                    <ul>
+                        <li>Ajout de <code>#planning .section-header</code> aux règles sticky</li>
+                        <li>Styles partagés avec <code>#dashboard .section-header</code></li>
+                    </ul>
+                </li>
+                <li><strong>js/mobile-sticky.js</strong>
+                    <ul>
+                        <li>Fonction renommée: <code>initStickyHeaders()</code></li>
+                        <li>Gestion des deux sections avec querySelectorAll</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 style="color: #2c5282;">✅ Points de Vérification</h2>
+        
+        <div class="test-item">
+            <strong>Sur iOS Safari:</strong>
+            <ul>
+                <li>✓ Scroll momentum fluide</li>
+                <li>✓ Pas de scintillement</li>
+                <li>✓ Touch events responsifs</li>
+            </ul>
+        </div>
+        
+        <div class="test-item">
+            <strong>Sur Chrome Android:</strong>
+            <ul>
+                <li>✓ Transitions smooth</li>
+                <li>✓ Pas de décalage visuel</li>
+                <li>✓ Performance optimale</li>
+            </ul>
+        </div>
+        
+        <div class="test-item warning">
+            <strong>Attention:</strong>
+            <ul>
+                <li>Tester après rotation d'écran</li>
+                <li>Vérifier avec contenu long (beaucoup de missions)</li>
+                <li>S'assurer que le retour arrière fonctionne bien</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Détection et log pour debug
+        const isMobile = window.innerWidth <= 768;
+        const userAgent = navigator.userAgent;
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+        const isAndroid = /Android/.test(userAgent);
+        
+        console.log('🔍 Test Planning Sticky Mobile');
+        console.log('📱 Screen width:', window.innerWidth);
+        console.log('📱 Is Mobile:', isMobile);
+        console.log('📱 Platform:', isIOS ? 'iOS' : (isAndroid ? 'Android' : 'Other'));
+        
+        if (isMobile) {
+            console.log('✅ Mobile mode active - Sticky planning header should work');
+            console.log('ℹ️ Both Dashboard and Planning sections now have sticky month selectors');
+        } else {
+            console.log('⚠️ Desktop mode - Switch to mobile view to test');
+            console.log('💡 Use Chrome DevTools responsive mode (F12)');
+        }
+    </script>
+</body>
+</html>

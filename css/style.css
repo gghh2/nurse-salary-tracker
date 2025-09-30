@@ -1003,3 +1003,208 @@ body {
         text-align: right;
     }
 }
+
+/* ======================================= */
+/* MOBILE STICKY ELEMENTS - Nouvelles fonctionnalités */
+/* ======================================= */
+
+/* Sur mobile uniquement */
+@media (max-width: 768px) {
+    
+    /* =========================== */
+    /* 1. STICKY ACRONYM - TARIFS */
+    /* =========================== */
+    
+    /* Container de la table avec scroll horizontal */
+    .rates-table-container {
+        position: relative;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling sur iOS */
+    }
+    
+    /* Première colonne (Acronyme) - Header */
+    .rates-table thead th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background: var(--light-gray);
+        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+        min-width: 100px;
+    }
+    
+    /* Première colonne (Acronyme) - Cellules */
+    .rates-table tbody td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 9;
+        background: white;
+        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08);
+        max-width: 20px;
+    }
+    
+    /* Au survol de la ligne, adapter la couleur de fond */
+    .rates-table tbody tr:hover td:first-child {
+        background: var(--light-gray);
+    }
+    
+    /* S'assurer que le contenu de la première colonne est bien visible */
+    .rates-table td:first-child strong {
+        display: inline-block;
+        white-space: nowrap;
+    }
+    
+    /* ============================================ */
+    /* 2. STICKY MONTH SELECTOR - DASHBOARD & PLANNING */
+    /* ============================================ */
+    
+    /* Container du sélecteur de mois dans le tableau de bord ET le planning */
+    #dashboard .section-header,
+    #planning .section-header {
+        position: sticky;
+        top: -1px; /* Léger décalage pour éviter les problèmes de rendering */
+        z-index: 40; /* Réduit pour éviter les conflits avec les modales */
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        margin-left: -15px;  /* Compenser le padding du container */
+        margin-right: -15px;
+        margin-bottom: 1rem;
+        padding: 1rem 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease; /* Animation fluide */
+    }
+    
+    /* Ajouter une ombre plus prononcée quand l'élément est "stuck" */
+    #dashboard .section-header.is-stuck,
+    #planning .section-header.is-stuck {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Adapter le style du sélecteur dans ce contexte */
+    #dashboard .month-selector,
+    #planning .month-selector {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        border: none;
+    }
+    
+    /* Boutons du sélecteur avec meilleur contraste */
+    #dashboard .month-selector button,
+    #planning .month-selector button {
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+    
+    #dashboard .month-selector button:hover,
+    #planning .month-selector button:hover {
+        background: rgba(44, 82, 130, 0.1);
+    }
+    
+    /* Texte du mois avec meilleur style */
+    #dashboard-month-display,
+    #current-month-display {
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    /* Ajustement spécifique pour le planning */
+    #planning .section-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* S'assurer que le bouton FAB reste bien positionné */
+    #planning.app-section.active #add-mission-btn {
+        /* Le FAB garde son positionnement fixe indépendamment */
+        position: fixed !important;
+    }
+    
+    /* Ajustement pour les très petits écrans */
+    @media (max-width: 380px) {
+        /* Réduire la taille minimale de la première colonne */
+        .rates-table thead th:first-child,
+        .rates-table tbody td:first-child {
+            min-width: 80px;
+            font-size: 0.9rem;
+        }
+        
+        /* Réduire le padding du sticky header */
+        #dashboard .section-header,
+        #planning .section-header {
+            padding: 0.75rem 10px;
+        }
+    }
+    
+    /* ==================================== */
+    /* 3. AMÉLIORATIONS VISUELLES STICKY */
+    /* ==================================== */
+    
+    /* Indicateur visuel de scroll horizontal disponible */
+    .rates-table-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 30px;
+        background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.05));
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    /* Afficher l'indicateur quand il y a du contenu à scroller */
+    .rates-table-container:not(:hover)::after {
+        opacity: 1;
+    }
+    
+    /* Améliorer la lisibilité du [NC] indicator */
+    .rates-table td:first-child span[title="Non compté dans les statistiques"] {
+        display: inline-block;
+        margin-left: 0.25rem;
+        font-weight: 600;
+    }
+    
+    /* ==================================== */
+    /* 4. CLASSES DYNAMIQUES JS */
+    /* ==================================== */
+    
+    /* Quand la table est en cours de scroll */
+    .rates-table-container.is-scrolling::after {
+        opacity: 0 !important;
+    }
+    
+    /* Indicateur de scroll disponible à droite */
+    .rates-table-container.can-scroll-right::before {
+        content: '\276F'; /* Chevron droit */
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        color: var(--primary-color);
+        opacity: 0.5;
+        animation: pulse 2s infinite;
+        z-index: 11;
+        pointer-events: none;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.7; }
+    }
+    
+    /* Transition fluide pour les sticky headers */
+    #dashboard .section-header,
+    #planning .section-header {
+        will-change: box-shadow;
+    }
+    
+    /* Performance optimization pour le scroll */
+    .rates-table-container {
+        will-change: scroll-position;
+    }
+}

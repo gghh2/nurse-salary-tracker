@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Mobile Sticky Elements</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c5282;
+            font-size: 1.5rem;
+        }
+        
+        h2 {
+            color: #3182ce;
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .test-item {
+            padding: 10px;
+            margin: 10px 0;
+            background: #f7fafc;
+            border-left: 4px solid #38a169;
+            border-radius: 4px;
+        }
+        
+        .warning {
+            border-left-color: #d69e2e;
+        }
+        
+        .mobile-only {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-only {
+                display: block;
+                padding: 15px;
+                background: #e8f5e8;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            
+            .desktop-only {
+                display: none;
+            }
+        }
+        
+        code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .screenshot-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-section">
+        <h1>📱 Test des Éléments Sticky Mobile</h1>
+        
+        <div class="mobile-only">
+            <strong>✅ Vous êtes sur un appareil mobile!</strong><br>
+            Les fonctionnalités sticky sont actives.
+        </div>
+        
+        <div class="desktop-only">
+            <strong>⚠️ Vous êtes sur desktop.</strong><br>
+            Veuillez ouvrir les outils de développement (F12) et activer le mode mobile pour tester.
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>1️⃣ Test: Sticky Acronyme (Table des Tarifs)</h2>
+        
+        <div class="test-item">
+            <strong>Étapes de test:</strong>
+            <ol>
+                <li>Ouvrir l'application sur mobile</li>
+                <li>Aller dans la section "Tarifs"</li>
+                <li>Faire défiler la table horizontalement (swipe de droite à gauche)</li>
+            </ol>
+        </div>
+        
+        <div class="test-item">
+            <strong>Résultat attendu:</strong>
+            <ul>
+                <li>✅ La colonne "Acronyme" reste visible à gauche</li>
+                <li>✅ Une ombre subtile sépare la colonne fixe du reste</li>
+                <li>✅ Le scroll horizontal est fluide</li>
+                <li>✅ L'indicateur [NC] reste visible avec l'acronyme</li>
+            </ul>
+        </div>
+        
+        <div class="test-item warning">
+            <strong>Points d'attention:</strong>
+            <ul>
+                <li>Tester sur différentes tailles d'écran (320px, 375px, 414px)</li>
+                <li>Vérifier sur iOS Safari et Chrome Android</li>
+                <li>S'assurer que le hover fonctionne sur les lignes</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2️⃣ Test: Sticky Sélecteur de Mois (Tableau de bord)</h2>
+        
+        <div class="test-item">
+            <strong>Étapes de test:</strong>
+            <ol>
+                <li>Ouvrir l'application sur mobile</li>
+                <li>Aller dans "Tableau de bord"</li>
+                <li>Faire défiler vers le bas (scroll vertical)</li>
+            </ol>
+        </div>
+        
+        <div class="test-item">
+            <strong>Résultat attendu:</strong>
+            <ul>
+                <li>✅ Le sélecteur de mois reste fixé en haut</li>
+                <li>✅ Background avec dégradé bleu</li>
+                <li>✅ Ombre portée pour la profondeur</li>
+                <li>✅ Les boutons &lt; et &gt; restent fonctionnels</li>
+                <li>✅ Le nom du mois est bien lisible</li>
+            </ul>
+        </div>
+        
+        <div class="test-item warning">
+            <strong>Points d'attention:</strong>
+            <ul>
+                <li>Le z-index doit être suffisant (50)</li>
+                <li>Pas de conflit avec les autres éléments sticky</li>
+                <li>Le padding doit s'adapter aux petits écrans</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎨 Améliorations Visuelles</h2>
+        
+        <div class="test-item">
+            <strong>Indicateur de scroll horizontal (Tarifs):</strong>
+            <ul>
+                <li>Un dégradé subtil à droite indique qu'il y a du contenu à faire défiler</li>
+                <li>Disparaît au hover/touch</li>
+            </ul>
+        </div>
+        
+        <div class="test-item">
+            <strong>Styles adaptés:</strong>
+            <ul>
+                <li>Ombres portées pour la profondeur</li>
+                <li>Transitions fluides</li>
+                <li>Couleurs cohérentes avec le thème</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>✨ Fonctionnalités CSS Utilisées</h2>
+        
+        <div class="test-item">
+            <code>position: sticky</code> - Élément qui reste fixe dans son conteneur<br>
+            <code>z-index</code> - Gestion de l'empilement des éléments
+            <code>-webkit-overflow-scrolling: touch</code> - Scroll fluide sur iOS<br>
+            <code>box-shadow</code> - Ombres pour la profondeur visuelle<br>
+            <code>@media queries</code> - Styles spécifiques au mobile
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Compatibilité Navigateurs</h2>
+        
+        <div class="test-item">
+            <strong>Support de position: sticky:</strong>
+            <ul>
+                <li>✅ iOS Safari 6.1+</li>
+                <li>✅ Chrome Android 56+</li>
+                <li>✅ Firefox Mobile 32+</li>
+                <li>✅ Samsung Internet 6.2+</li>
+            </ul>
+        </div>
+        
+        <div class="test-item warning">
+            <strong>Fallback pour anciens navigateurs:</strong>
+            <p>Les éléments restent en position normale sans le sticky, l'application reste utilisable.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Détection simple mobile/desktop
+        const isMobile = window.innerWidth <= 768;
+        console.log('Test Mobile Sticky Elements');
+        console.log('Screen width:', window.innerWidth);
+        console.log('Is Mobile:', isMobile);
+        
+        if (isMobile) {
+            console.log('✅ Mobile view active - Sticky elements should work');
+        } else {
+            console.log('⚠️ Desktop view - Switch to mobile view to test sticky elements');
+        }
+    </script>
+</body>
+</html>

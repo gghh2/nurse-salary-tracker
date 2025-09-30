@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Test Swipe Handler</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .debug-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c5282;
+            font-size: 1.5rem;
+            margin-top: 0;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .status.ok {
+            background: #dcfce7;
+            color: #14532d;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+        
+        .coords {
+            font-family: monospace;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .test-area {
+            height: 200px;
+            background: linear-gradient(135deg, #e0f2fe, #ddd6fe);
+            border: 2px dashed #6366f1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #4338ca;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .test-area::before,
+        .test-area::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            opacity: 0.3;
+        }
+        
+        .test-area::before {
+            content: '←';
+            left: 20px;
+        }
+        
+        .test-area::after {
+            content: '→';
+            right: 20px;
+        }
+        
+        button {
+            background: #3182ce;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #2563eb;
+        }
+        
+        .log {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+        }
+        
+        .log-entry.touch {
+            color: #60a5fa;
+        }
+        
+        .log-entry.swipe {
+            color: #34d399;
+        }
+        
+        .log-entry.error {
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-panel">
+        <h1>🔍 Debug Swipe Handler</h1>
+        <div id="status" class="status">En attente...</div>
+    </div>
+    
+    <div class="debug-panel">
+        <h2>📊 Coordonnées</h2>
+        <div class="coords" id="coords">
+            Start: (0, 0)<br>
+            End: (0, 0)<br>
+            Delta X: 0<br>
+            Delta Y: 0
+        </div>
+    </div>
+    
+    <div class="debug-panel">
+        <h2>🎯 Zone de Test</h2>
+        <div class="test-area" id="testArea">
+            Swipez ici !
+        </div>
+        <p style="color: #64748b; margin-top: 10px;">
+            Swipez horizontalement pour tester. Le swipe doit être > 50px en horizontal.
+        </p>
+    </div>
+    
+    <div class="debug-panel">
+        <h2>🧪 Tests Interactifs</h2>
+        <button onclick="testSwipe()">Bouton (ne doit pas swiper)</button>
+        <input type="text" placeholder="Input (ne doit pas swiper)" style="padding: 10px; margin: 5px;">
+        <p style="margin-top: 10px; padding: 10px; background: #f0f9ff; border-radius: 6px;">
+            Zone normale (doit swiper)
+        </p>
+    </div>
+    
+    <div class="debug-panel">
+        <h2>📝 Log</h2>
+        <div class="log" id="log"></div>
+    </div>
+    
+    <script>
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+        let logEntries = [];
+        
+        function addLog(message, type = '') {
+            const timestamp = new Date().toLocaleTimeString();
+            logEntries.unshift(`<div class="log-entry ${type}">[${timestamp}] ${message}</div>`);
+            if (logEntries.length > 20) logEntries.pop();
+            document.getElementById('log').innerHTML = logEntries.join('');
+        }
+        
+        function updateCoords() {
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            document.getElementById('coords').innerHTML = `
+                Start: (${Math.round(touchStartX)}, ${Math.round(touchStartY)})<br>
+                End: (${Math.round(touchEndX)}, ${Math.round(touchEndY)})<br>
+                Delta X: ${Math.round(deltaX)}<br>
+                Delta Y: ${Math.round(deltaY)}
+            `;
+            
+            // Vérifier si c'est un swipe valide
+            if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 100) {
+                const direction = deltaX > 0 ? 'DROITE (Mois précédent)' : 'GAUCHE (Mois suivant)';
+                document.getElementById('status').className = 'status ok';
+                document.getElementById('status').textContent = `✅ Swipe détecté : ${direction}`;
+                addLog(`SWIPE VALIDE : ${direction} (${Math.round(deltaX)}px)`, 'swipe');
+                
+                // Vibration si disponible
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }
+        }
+        
+        // Gestionnaire pour la zone de test
+        const testArea = document.getElementById('testArea');
+        
+        // Touch events
+        testArea.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchEndX = touchStartX;
+            touchEndY = touchStartY;
+            addLog(`Touch Start: (${Math.round(touchStartX)}, ${Math.round(touchStartY)})`, 'touch');
+            document.getElementById('status').className = 'status';
+            document.getElementById('status').textContent = 'Touch en cours...';
+        });
+        
+        testArea.addEventListener('touchmove', (e) => {
+            touchEndX = e.touches[0].clientX;
+            touchEndY = e.touches[0].clientY;
+            updateCoords();
+        });
+        
+        testArea.addEventListener('touchend', (e) => {
+            if (e.changedTouches && e.changedTouches[0]) {
+                touchEndX = e.changedTouches[0].clientX;
+                touchEndY = e.changedTouches[0].clientY;
+            }
+            addLog(`Touch End: (${Math.round(touchEndX)}, ${Math.round(touchEndY)})`, 'touch');
+            updateCoords();
+        });
+        
+        // Mouse events pour desktop
+        let isMouseDown = false;
+        
+        document.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            touchStartX = e.clientX;
+            touchStartY = e.clientY;
+            touchEndX = touchStartX;
+            touchEndY = touchStartY;
+            
+            const target = e.target;
+            const isButton = target.tagName === 'BUTTON';
+            const isInput = target.tagName === 'INPUT';
+            
+            if (isButton || isInput) {
+                addLog(`Clic sur élément interactif: ${target.tagName}`, 'error');
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').textContent = '❌ Élément interactif - Swipe ignoré';
+                isMouseDown = false;
+                return;
+            }
+            
+            addLog(`Mouse Down: (${Math.round(touchStartX)}, ${Math.round(touchStartY)})`, 'touch');
+            document.getElementById('status').className = 'status';
+            document.getElementById('status').textContent = 'Mouse en cours...';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (isMouseDown) {
+                touchEndX = e.clientX;
+                touchEndY = e.clientY;
+                updateCoords();
+            }
+        });
+        
+        document.addEventListener('mouseup', (e) => {
+            if (isMouseDown) {
+                isMouseDown = false;
+                touchEndX = e.clientX;
+                touchEndY = e.clientY;
+                addLog(`Mouse Up: (${Math.round(touchEndX)}, ${Math.round(touchEndY)})`, 'touch');
+                updateCoords();
+            }
+        });
+        
+        function testSwipe() {
+            addLog('Clic sur bouton - Ne devrait pas déclencher de swipe', 'error');
+        }
+        
+        // Info initiale
+        addLog('Debug Swipe Handler prêt', 'swipe');
+        addLog('Mode: ' + (window.innerWidth <= 768 ? 'MOBILE' : 'DESKTOP'));
+        
+        // Vérifier si le swipe handler est chargé
+        if (window.swipeHandler) {
+            addLog('✅ SwipeHandler chargé', 'swipe');
+        } else {
+            addLog('❌ SwipeHandler non trouvé', 'error');
+        }
+    </script>
+</body>
+</html>

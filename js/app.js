@@ -378,7 +378,7 @@ class NurseSalaryApp {
 
         const ratesHtml = rates.map(rate => `
             <tr>
-                <td><strong>${rate.acronym}</strong></td>
+                <td><strong>${rate.acronym}</strong> ${rate.excludeFromCount ? '<span style="color: #ff6b6b; font-size: 0.85em;" title="Non compté dans les statistiques">[NC]</span>' : ''}</td>
                 <td>${rate.description || '-'}</td>
                 <td>${rate.establishment || '-'}</td>
                 <td>${rate.hours === 0 ? 'Indemnité' : rate.hours + 'h'}</td>
@@ -431,10 +431,13 @@ class NurseSalaryApp {
                 document.getElementById('rate-salary').value = rate.salary || '';
                 document.getElementById('rate-start-time').value = rate.startTime || '';
                 document.getElementById('rate-end-time').value = rate.endTime || '';
+                document.getElementById('rate-exclude-from-count').checked = rate.excludeFromCount || false;
             }
         } else {
             // Mode création
             title.textContent = 'Ajouter un tarif';
+            // S'assurer que la case est décochée pour un nouveau tarif
+            document.getElementById('rate-exclude-from-count').checked = false;
         }
 
         this.showModal('rate-modal');
@@ -527,7 +530,8 @@ class NurseSalaryApp {
             hourlyRate: finalHourlyRate,
             salary: finalSalary,
             startTime: document.getElementById('rate-start-time').value || null,
-            endTime: document.getElementById('rate-end-time').value || null
+            endTime: document.getElementById('rate-end-time').value || null,
+            excludeFromCount: document.getElementById('rate-exclude-from-count').checked
         };
 
         // Validation

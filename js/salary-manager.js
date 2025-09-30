@@ -74,7 +74,9 @@ class SalaryManager {
         missions.forEach(mission => {
             if (mission.status !== 'cancelled') {
                 const rate = rates.find(r => r.id === mission.rateId);
-                if (rate && rate.hours > 0) { // Ne compter que les missions avec des heures (pas les indemnités)
+                // Ne compter que les missions avec des heures (pas les indemnités)
+                // ET qui ne sont pas exclues du comptage
+                if (rate && rate.hours > 0 && !rate.excludeFromCount) {
                     totalHours += rate.hours;
                 }
             }

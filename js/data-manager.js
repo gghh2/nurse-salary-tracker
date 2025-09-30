@@ -437,13 +437,14 @@ class DataManager {
                 const rate = rates.find(r => r.id === mission.rateId);
                 if (rate) {
                     // Salaire estimé (priorité au salary stocké, sinon calculer depuis hourlyRate)
+                    // Le salaire est TOUJOURS compté, même si excludeFromCount est true
                     if (rate.salary && rate.salary > 0) {
                         totalEstimatedSalary += rate.salary;
                     } else if (rate.hourlyRate && rate.hours > 0) {
                         totalEstimatedSalary += rate.hourlyRate * rate.hours;
                     }
                     
-                    // Salaire réel si renseigné
+                    // Salaire réel si renseigné (toujours compté)
                     if (mission.realGrossSalary && mission.realGrossSalary > 0) {
                         totalRealGrossSalary += mission.realGrossSalary;
                     }
@@ -452,11 +453,14 @@ class DataManager {
                         realSalaryCount++;
                     }
                     
-                    // Ne compter les heures que pour les missions non-indemnités
-                    if (rate.hours > 0) {
-                        totalHours += rate.hours;
+                    // Ne compter les heures et missions que si NOT excludeFromCount
+                    if (!rate.excludeFromCount) {
+                        // Ne compter les heures que pour les missions non-indemnités
+                        if (rate.hours > 0) {
+                            totalHours += rate.hours;
+                        }
+                        missionCount++;
                     }
-                    missionCount++;
                 }
             }
         });

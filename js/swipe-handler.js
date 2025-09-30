@@ -11,6 +11,7 @@ class SwipeHandler {
         this.touchEndY = 0;
         this.minSwipeDistance = 50; // Distance minimale pour déclencher un swipe (px)
         this.maxVerticalDistance = 100; // Distance verticale max pour valider un swipe horizontal
+        this.isSwiping = false; // Flag pour indiquer si on est en train de swiper
         
         // Initialiser sur mobile uniquement
         if (this.isMobile()) {
@@ -48,6 +49,16 @@ class SwipeHandler {
         // Ajouter les événements tactiles au Planning
         if (planningSection) {
             this.addSwipeListeners(planningSection, 'planning');
+            
+            // Vérifier si l'utilisateur a déjà vu le tutoriel de swipe
+            if (localStorage.getItem('planning-swipe-tutorial-seen') === 'true') {
+                planningSection.classList.add('swipe-used');
+            } else {
+                // Masquer automatiquement l'indicateur après 8 secondes
+                setTimeout(() => {
+                    planningSection.classList.add('swipe-used');
+                }, 8000);
+            }
         }
         
         // Ajouter les événements tactiles au Dashboard
@@ -60,19 +71,16 @@ class SwipeHandler {
      * Ajouter les listeners de swipe à un élément
      */
     addSwipeListeners(element, section) {
-        // Utiliser la zone du calendrier ou des stats pour le swipe
+        // Pour Planning, utiliser toute la section
+        // Pour Dashboard, utiliser la zone des stats ou toute la section
         let swipeZone = element;
         
-        if (section === 'planning') {
-            // Pour Planning, utiliser la zone du calendrier
-            swipeZone = element.querySelector('.planning-grid');
-        } else if (section === 'dashboard') {
-            // Pour Dashboard, utiliser la zone des statistiques
-            swipeZone = element.querySelector('.stats-grid');
-        }
-        
-        if (!swipeZone) {
-            swipeZone = element;
+        if (section === 'dashboard') {
+            // Pour Dashboard, préférer la zone des statistiques
+            const statsGrid = element.querySelector('.stats-grid');
+            if (statsGrid) {
+                swipeZone = statsGrid;
+            }
         }
         
         // Touch events
@@ -86,26 +94,27 @@ class SwipeHandler {
             
             swipeZone.addEventListener('mousedown', (e) => {
                 isMouseDown = true;
-                this.touchStartX = e.clientX;
-                this.touchStartY = e.clientY;
+                this.handleTouchStart({ touches: [{ clientX: e.clientX, clientY: e.clientY }], target: e.target });
             });
             
             swipeZone.addEventListener('mousemove', (e) => {
                 if (isMouseDown) {
-                    this.touchEndX = e.clientX;
-                    this.touchEndY = e.clientY;
+                    this.handleTouchMove({ touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: () => {} });
                 }
             });
             
             swipeZone.addEventListener('mouseup', (e) => {
                 if (isMouseDown) {
                     isMouseDown = false;
+                    this.touchEndX = e.clientX;
+                    this.touchEndY = e.clientY;
                     this.handleSwipeGesture(section);
                 }
             });
             
             swipeZone.addEventListener('mouseleave', () => {
                 isMouseDown = false;
+                this.isSwiping = false;
             });
         }
     }
@@ -114,15 +123,33 @@ class SwipeHandler {
      * Gérer le début du touch
      */
     handleTouchStart(e) {
-        // Récupérer les coordonnées du premier doigt
+        // Vérifier si on touche un élément vraiment interactif (bouton ou input)
+        const target = e.target;
+        const isButton = target.tagName === 'BUTTON' || target.closest('button');
+        const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName);
+        const isMissionItem = target.closest('.mission-item');
+        const isLink = target.tagName === 'A' || target.closest('a');
+        
+        // Ignorer seulement les vrais éléments interactifs
+        if (isButton || isInput || isMissionItem || isLink) {
+            this.isSwiping = false;
+            return;
+        }
+        
+        // Commencer le tracking du swipe
+        this.isSwiping = true;
         this.touchStartX = e.touches[0].clientX;
         this.touchStartY = e.touches[0].clientY;
+        this.touchEndX = this.touchStartX;
+        this.touchEndY = this.touchStartY;
     }
     
     /**
      * Gérer le mouvement du touch
      */
     handleTouchMove(e) {
+        if (!this.isSwiping) return;
+        
         // Stocker les dernières coordonnées
         if (e.touches[0]) {
             this.touchEndX = e.touches[0].clientX;
@@ -142,7 +169,16 @@ class SwipeHandler {
      * Gérer la fin du touch
      */
     handleTouchEnd(e, section) {
+        if (!this.isSwiping) return;
+        
+        // Si touchEndX et touchEndY n'ont pas été mis à jour par touchMove, les récupérer
+        if (e.changedTouches && e.changedTouches[0]) {
+            this.touchEndX = e.changedTouches[0].clientX;
+            this.touchEndY = e.changedTouches[0].clientY;
+        }
+        
         this.handleSwipeGesture(section);
+        this.isSwiping = false;
     }
     
     /**
@@ -157,9 +193,17 @@ class SwipeHandler {
             if (deltaX > 0) {
                 // Swipe vers la droite - mois précédent
                 this.navigateToPreviousMonth(section);
+                // Feedback haptique sur mobile si disponible
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(10);
+                }
             } else {
                 // Swipe vers la gauche - mois suivant
                 this.navigateToNextMonth(section);
+                // Feedback haptique sur mobile si disponible
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(10);
+                }
             }
             
             // Feedback visuel
@@ -182,6 +226,8 @@ class SwipeHandler {
             const prevBtn = document.getElementById('prev-month');
             if (prevBtn) {
                 prevBtn.click();
+                // Marquer que le swipe a été utilisé pour masquer l'indicateur
+                this.markSwipeUsed(section);
             }
         } else if (section === 'dashboard') {
             // Cliquer sur le bouton précédent du dashboard
@@ -201,12 +247,28 @@ class SwipeHandler {
             const nextBtn = document.getElementById('next-month');
             if (nextBtn) {
                 nextBtn.click();
+                // Marquer que le swipe a été utilisé pour masquer l'indicateur
+                this.markSwipeUsed(section);
             }
         } else if (section === 'dashboard') {
             // Cliquer sur le bouton suivant du dashboard
             const nextBtn = document.getElementById('dashboard-next-month');
             if (nextBtn) {
                 nextBtn.click();
+            }
+        }
+    }
+    
+    /**
+     * Marquer que le swipe a été utilisé (pour masquer l'indicateur)
+     */
+    markSwipeUsed(section) {
+        if (section === 'planning') {
+            const planningSection = document.getElementById('planning');
+            if (planningSection) {
+                planningSection.classList.add('swipe-used');
+                // Enregistrer dans le localStorage pour ne plus afficher l'indicateur
+                localStorage.setItem('planning-swipe-tutorial-seen', 'true');
             }
         }
     }
@@ -270,23 +332,53 @@ if (!document.getElementById('swipe-animations')) {
         
         /* Indicateur de swipe sur mobile */
         @media (max-width: 768px) {
-            .planning-grid,
-            .stats-grid {
+            /* Section Planning avec indication de swipe disponible sur toute la page */
+            #planning.app-section.active {
                 position: relative;
+                min-height: 100vh;
             }
             
-            /* Petits indicateurs visuels de swipe */
-            .planning-grid::after,
-            .stats-grid::after {
-                content: '';
-                position: absolute;
-                bottom: 10px;
+            /* Indicateur visuel de swipe en bas de l'écran */
+            #planning.app-section.active::before {
+                content: '← Swipe pour naviguer →';
+                position: fixed;
+                bottom: 90px; /* Au-dessus du FAB */
                 left: 50%;
                 transform: translateX(-50%);
-                width: 40px;
-                height: 4px;
-                background: rgba(0, 0, 0, 0.1);
-                border-radius: 2px;
+                background: rgba(44, 82, 130, 0.9);
+                color: white;
+                padding: 6px 16px;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 500;
+                pointer-events: none;
+                z-index: 30;
+                animation: slideUpFade 0.5s ease-out;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                opacity: 0.8;
+            }
+            
+            /* Animation d'entrée */
+            @keyframes slideUpFade {
+                from { 
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(20px);
+                }
+                to {
+                    opacity: 0.8;
+                    transform: translateX(-50%) translateY(0);
+                }
+            }
+            
+            /* Masquer l'indicateur après le premier swipe */
+            #planning.app-section.swipe-used::before {
+                display: none;
+            }
+            
+            /* Zone de swipe étendue pour Planning */
+            #planning.app-section.active {
+                /* Indiquer visuellement que toute la zone est swipable */
+                touch-action: pan-y;
             }
         }
     `;
