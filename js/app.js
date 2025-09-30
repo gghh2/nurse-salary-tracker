@@ -233,24 +233,6 @@ class NurseSalaryApp {
                 this.loadPlanning();
             });
         }
-
-        // Navigation du tableau de bord
-        const dashboardPrevBtn = document.getElementById('dashboard-prev-month');
-        const dashboardNextBtn = document.getElementById('dashboard-next-month');
-
-        if (dashboardPrevBtn) {
-            dashboardPrevBtn.addEventListener('click', () => {
-                this.salaryManager.goToPreviousDashboardMonth();
-                this.loadDashboard();
-            });
-        }
-
-        if (dashboardNextBtn) {
-            dashboardNextBtn.addEventListener('click', () => {
-                this.salaryManager.goToNextDashboardMonth();
-                this.loadDashboard();
-            });
-        }
         
         // Navigation du récapitulatif annuel
         const yearlyPrevBtn = document.getElementById('yearly-prev-year');
@@ -574,26 +556,7 @@ class NurseSalaryApp {
     loadDashboard() {
         const dashboardData = this.salaryManager.getDashboardData();
         
-        // Mettre à jour les statistiques
-        this.updateElement('current-month-total', dashboardData.stats.currentMonthTotal);
-        this.updateElement('current-month-real', dashboardData.stats.currentMonthReal);
-        this.updateElement('current-month-hours', dashboardData.stats.currentMonthHours);
-        this.updateElement('missions-count', dashboardData.stats.missionsCount);
-        this.updateElement('hourly-average', dashboardData.stats.hourlyAverage);
-
-        // Mettre à jour les titres du mois
-        const dashboardTitle = document.getElementById('dashboard-month-title');
-        const dashboardDisplay = document.getElementById('dashboard-month-display');
-        
-        if (dashboardTitle) {
-            dashboardTitle.textContent = dashboardData.viewInfo.monthName;
-        }
-        
-        if (dashboardDisplay) {
-            dashboardDisplay.textContent = dashboardData.viewInfo.monthName;
-        }
-
-        // Afficher les prochaines missions (toujours basé sur le mois actuel)
+        // Afficher les prochaines missions
         this.displayUpcomingMissions(dashboardData.upcomingMissions);
         
         // Afficher le récapitulatif annuel par établissement

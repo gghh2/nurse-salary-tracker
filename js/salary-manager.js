@@ -10,10 +10,6 @@ class SalaryManager {
         this.currentViewMonth = this.currentDate.getMonth();
         this.currentViewYear = this.currentDate.getFullYear();
         
-        // État séparé pour le tableau de bord
-        this.dashboardViewMonth = this.currentDate.getMonth();
-        this.dashboardViewYear = this.currentDate.getFullYear();
-        
         // Année sélectionnée pour le récapitulatif annuel
         this.selectedYearlyYear = this.currentDate.getFullYear();
     }
@@ -205,13 +201,6 @@ class SalaryManager {
     }
 
     /**
-     * Calcule les statistiques pour le mois de vue actuel du tableau de bord
-     */
-    getDashboardMonthStats() {
-        return this.dataManager.getMonthlyStats(this.dashboardViewYear, this.dashboardViewMonth);
-    }
-
-    /**
      * Calcule les statistiques pour le mois de vue actuel du planning
      */
     getViewMonthStats() {
@@ -259,68 +248,6 @@ class SalaryManager {
                     })
                 };
             });
-    }
-
-    /**
-     * NAVIGATION DU TABLEAU DE BORD
-     */
-
-    /**
-     * Navigue vers le mois précédent dans le tableau de bord
-     */
-    goToPreviousDashboardMonth() {
-        if (this.dashboardViewMonth === 0) {
-            this.dashboardViewMonth = 11;
-            this.dashboardViewYear--;
-        } else {
-            this.dashboardViewMonth--;
-        }
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Navigue vers le mois suivant dans le tableau de bord
-     */
-    goToNextDashboardMonth() {
-        if (this.dashboardViewMonth === 11) {
-            this.dashboardViewMonth = 0;
-            this.dashboardViewYear++;
-        } else {
-            this.dashboardViewMonth++;
-        }
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Navigue vers un mois spécifique dans le tableau de bord
-     */
-    goToDashboardMonth(year, month) {
-        this.dashboardViewYear = year;
-        this.dashboardViewMonth = month;
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Revient au mois actuel dans le tableau de bord
-     */
-    goToCurrentDashboardMonth() {
-        this.dashboardViewYear = this.currentDate.getFullYear();
-        this.dashboardViewMonth = this.currentDate.getMonth();
-        return this.getCurrentDashboardViewInfo();
-    }
-
-    /**
-     * Récupère les informations du mois de vue actuel du tableau de bord
-     */
-    getCurrentDashboardViewInfo() {
-        const viewDate = new Date(this.dashboardViewYear, this.dashboardViewMonth, 1);
-        return {
-            year: this.dashboardViewYear,
-            month: this.dashboardViewMonth,
-            monthName: this.formatMonthName(viewDate) + ' ' + this.dashboardViewYear,
-            isCurrentMonth: this.dashboardViewYear === this.currentDate.getFullYear() && 
-                           this.dashboardViewMonth === this.currentDate.getMonth()
-        };
     }
 
     /**
@@ -1039,20 +966,12 @@ class SalaryManager {
      * Prépare les données pour l'affichage du tableau de bord
      */
     getDashboardData() {
-        const dashboardStats = this.getDashboardMonthStats();
         const upcomingMissions = this.getUpcomingMissions();
-        const viewInfo = this.getCurrentDashboardViewInfo();
+        const yearlyStats = this.getYearlyStatsByEstablishment();
         
         return {
-            stats: {
-                currentMonthTotal: this.formatCurrency(dashboardStats.totalEstimatedSalary),
-                currentMonthReal: this.formatCurrency(dashboardStats.totalRealNetSalary),
-                currentMonthHours: `${dashboardStats.totalHours}h`,
-                missionsCount: dashboardStats.missionCount,
-                hourlyAverage: this.formatCurrency(dashboardStats.averageHourlyRate)
-            },
             upcomingMissions: upcomingMissions,
-            viewInfo: viewInfo
+            yearlyStats: yearlyStats
         };
     }
 
@@ -1103,32 +1022,6 @@ class SalaryManager {
     }
 
     /**
-     * Prépare les données des tarifs pour le tableau
-     */
-    getRatesTableData() {
-        const rates = this.dataManager.getRates();
-        
-        return rates.map(rate => {
-            // Calculer le tarif horaire si nécessaire
-            const calculatedHourlyRate = this.calculateHourlyRate(rate);
-            
-            // Déterminer le salaire à afficher
-            let displaySalary = rate.salary;
-            if (!displaySalary && rate.hourlyRate && rate.hours) {
-                displaySalary = rate.hourlyRate * rate.hours;
-            }
-            
-            return {
-                ...rate,
-                hourlyRate: rate.hourlyRate || calculatedHourlyRate,
-                salary: displaySalary,
-                formattedSalary: this.formatCurrency(displaySalary || 0),
-                formattedHourlyRate: this.formatCurrency(calculatedHourlyRate)
-            };
-        });
-    }
-
-    /**
      * Recherche dans les tarifs
      */
     searchRates(searchTerm) {
@@ -1139,40 +1032,6 @@ class SalaryManager {
             rate.acronym.toLowerCase().includes(term) ||
             (rate.description && rate.description.toLowerCase().includes(term))
         );
-    }
-
-    /**
-     * Prépare les données pour le tableau de bord
-     */
-    getDashboardData() {
-        const viewInfo = this.getCurrentDashboardViewInfo();
-        const monthStats = this.getDashboardMonthStats();
-        const upcomingMissions = this.getUpcomingMissions();
-        const yearlyStats = this.getYearlyStatsByEstablishment();
-        
-        // Calculer les statistiques du mois
-        const totalEstimatedSalary = monthStats.totalEstimatedSalary || 0;
-        const totalRealSalary = monthStats.totalRealNetSalary || 0;
-        const totalHours = monthStats.totalHours || 0;
-        const missionCount = monthStats.missionCount || 0;
-        
-        // Calculer le tarif moyen horaire estimé
-        // Pour le dashboard mensuel, on utilise l'estimé car tous les salaires réels ne sont pas forcément saisis
-        const hourlyAverage = totalHours > 0 ? (totalEstimatedSalary / totalHours) : 0;
-        
-        return {
-            viewInfo: viewInfo,
-            stats: {
-                currentMonthTotal: this.formatCurrency(totalEstimatedSalary),
-                currentMonthReal: this.formatCurrency(totalRealSalary),
-                currentMonthHours: `${totalHours}h`,
-                missionsCount: missionCount,
-                hourlyAverage: this.formatCurrency(hourlyAverage)
-            },
-            upcomingMissions: upcomingMissions,
-            monthStats: monthStats,
-            yearlyStats: yearlyStats
-        };
     }
 
     /**
