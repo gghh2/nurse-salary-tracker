@@ -35,6 +35,10 @@ class NurseSalaryApp {
      */
     setupApp() {
         this.setupEventListeners();
+        
+        // Vérifier et mettre à jour automatiquement les missions confirmées passées
+        this.autoUpdateMissionStatuses();
+        
         this.loadDashboard();
         this.showNotification('Application chargée avec succès', 'success');
         
@@ -46,6 +50,12 @@ class NurseSalaryApp {
      * Enregistre le Service Worker pour le support PWA
      */
     registerServiceWorker() {
+        // Skip si on est en file:// (développement local sans serveur)
+        if (window.location.protocol === 'file:') {
+            console.log('Service Worker désactivé en mode file:// - utilisez un serveur local pour activer la PWA');
+            return;
+        }
+        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -554,6 +564,9 @@ class NurseSalaryApp {
      * TABLEAU DE BORD
      */
     loadDashboard() {
+        // Vérifier et mettre à jour les statuts avant d'afficher
+        this.autoUpdateMissionStatuses();
+        
         const dashboardData = this.salaryManager.getDashboardData();
         
         // Afficher les prochaines missions
@@ -959,6 +972,9 @@ class NurseSalaryApp {
      * PLANNING
      */
     loadPlanning() {
+        // Vérifier et mettre à jour les statuts avant d'afficher
+        this.autoUpdateMissionStatuses();
+        
         const planningData = this.salaryManager.getPlanningData();
         this.displayCalendar(planningData.calendarData);
         this.updateMonthDisplay(planningData.viewInfo);
@@ -1543,6 +1559,21 @@ class NurseSalaryApp {
     /**
      * UTILITAIRES D'INTERFACE
      */
+
+    /**
+     * Met à jour automatiquement les missions confirmées dont la date est passée
+     */
+    autoUpdateMissionStatuses() {
+        const result = this.dataManager.autoUpdatePastConfirmedMissions();
+        
+        // Si des missions ont été mises à jour, afficher une notification discrète
+        if (result.success && result.updatedCount > 0) {
+            console.log(`✅ ${result.updatedCount} mission(s) passée(s) au statut "Réalisée" automatiquement`);
+            
+            // Notification très discrète, uniquement visible dans la console
+            // On ne notifie pas l'utilisateur pour ne pas le déranger
+        }
+    }
 
     /**
      * Affiche une modale

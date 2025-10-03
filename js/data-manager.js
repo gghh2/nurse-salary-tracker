@@ -611,6 +611,52 @@ class DataManager {
      */
 
     /**
+     * Met à jour automatiquement les missions confirmées passées au statut "Réalisée"
+     * @returns {object} Informations sur les missions mises à jour
+     */
+    autoUpdatePastConfirmedMissions() {
+        const missions = this.getMissions();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour comparer uniquement les dates
+        
+        let updatedCount = 0;
+        const updatedMissions = [];
+        
+        missions.forEach(mission => {
+            // Vérifier si la mission est confirmée
+            if (mission.status === 'confirmed') {
+                // Extraire et parser la date de la mission
+                const missionDateStr = mission.date.split('T')[0]; // Format YYYY-MM-DD
+                const missionDate = new Date(missionDateStr + 'T00:00:00');
+                
+                // Si la date de la mission est passée (strictement inférieure à aujourd'hui)
+                if (missionDate < today) {
+                    mission.status = 'completed';
+                    mission.autoUpdatedAt = new Date().toISOString();
+                    updatedCount++;
+                    updatedMissions.push({
+                        id: mission.id,
+                        date: mission.date,
+                        establishment: mission.establishment
+                    });
+                }
+            }
+        });
+        
+        // Sauvegarder si des missions ont été mises à jour
+        if (updatedCount > 0) {
+            this.saveMissions(missions);
+            console.log(`Auto-update: ${updatedCount} mission(s) confirmée(s) passée(s) au statut "Réalisée"`);
+        }
+        
+        return {
+            success: true,
+            updatedCount: updatedCount,
+            updatedMissions: updatedMissions
+        };
+    }
+
+    /**
      * Migre les missions existantes pour ajouter les horaires depuis les tarifs
      * À exécuter une seule fois après l'ajout de la fonctionnalité horaires
      */
