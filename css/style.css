@@ -385,12 +385,27 @@ body {
 
 .calendar-day.today {
     background: #e3f2fd;
-    border-color: var(--primary-color);
+    border: 1px solid var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(44, 82, 130, 0.2), inset 0 0 0 1px var(--primary-color);
+    position: relative;
+}
+
+/* Indicateur visuel supplémentaire pour le jour actuel */
+.calendar-day.today::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 0 4px rgba(44, 82, 130, 0.5);
 }
 
 .calendar-day.has-mission {
     background: #f0fff4;
-    border-left: 4px solid var(--success-color);
 }
 
 .day-number {
@@ -412,7 +427,6 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 80%;
 }
 
 .mission-item:hover {
@@ -956,7 +970,7 @@ body {
     .calendar-day {
         min-height: 60px;
         font-size: 0.9rem;
-        aspect-ratio: 1; /* Maintenir les cases carrées sur mobile */
+        aspect-ratio: 0.8; /* Maintenir les cases carrées sur mobile */
         padding: 0.25rem;
     }
     
